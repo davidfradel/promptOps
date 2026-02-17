@@ -10,7 +10,6 @@ import { Discover } from './pages/Discover';
 import { SavedInsights } from './pages/SavedInsights';
 import { Onboarding } from './pages/Onboarding';
 import { Insights } from './pages/Insights';
-import { Specs } from './pages/Specs';
 import { Settings } from './pages/Settings';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -46,7 +45,6 @@ export function App() {
                 <Route index element={<Discover />} />
                 <Route path="/saved" element={<SavedInsights />} />
                 <Route path="/insights" element={<Insights />} />
-                <Route path="/specs" element={<Specs />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
