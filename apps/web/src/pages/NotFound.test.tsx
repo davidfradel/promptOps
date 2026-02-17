@@ -1,0 +1,35 @@
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { NotFound } from './NotFound';
+
+describe('NotFound', () => {
+  it('renders 404 message', () => {
+    render(
+      <MemoryRouter>
+        <NotFound />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText('404')).toBeInTheDocument();
+    expect(screen.getByText('Page not found')).toBeInTheDocument();
+  });
+
+  it('shows a description message', () => {
+    render(
+      <MemoryRouter>
+        <NotFound />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText("The page you're looking for doesn't exist.")).toBeInTheDocument();
+  });
+
+  it('has a link back to dashboard', () => {
+    render(
+      <MemoryRouter>
+        <NotFound />
+      </MemoryRouter>,
+    );
+    const link = screen.getByText('Back to Dashboard').closest('a');
+    expect(link).toHaveAttribute('href', '/');
+  });
+});
