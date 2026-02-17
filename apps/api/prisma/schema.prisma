@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Platform {
+  REDDIT
+  HACKERNEWS
+  TWITTER
+  PRODUCTHUNT
+}
+
+enum InsightType {
+  PAIN_POINT
+  FEATURE_REQUEST
+  COMPETITOR
+  TREND
+  SENTIMENT
+}
+
+enum SpecFormat {
+  MARKDOWN
+  CLAUDE_CODE
+  LINEAR
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model Project {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  keywords    String[]
+  niche       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  sources     Source[]
+  insights    Insight[]
+  specs       Spec[]
+
+  @@index([niche])
+}
+
+model Source {
+  id        String   @id @default(cuid())
+  projectId String
+  platform  Platform
+  url       String
+  config    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  rawPosts   RawPost[]
+  scrapeJobs ScrapeJob[]
+
+  @@unique([projectId, platform, url])
+  @@index([projectId])
+}
+
+model RawPost {
+  id         String    @id @default(cuid())
+  sourceId   String
+  externalId String
+  platform   Platform
+  title      String?
+  body       String?
+  author     String?
+  url        String?
+  score      Int?
+  postedAt   DateTime?
+  metadata   Json?
+  createdAt  DateTime  @default(now())
+
+  source         Source          @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  insightSources InsightSource[]
+
+  @@unique([platform, externalId])
+  @@index([sourceId])
+  @@index([platform, postedAt])
+}
+
+model Insight {
+  id          String      @id @default(cuid())
+  projectId   String
+  type        InsightType
+  title       String
+  description String
+  severity    Int         @default(0)
+  confidence  Float       @default(0)
+  tags        String[]
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  insightSources InsightSource[]
+
+  @@index([projectId, type])
+  @@index([projectId, severity])
+}
+
+model InsightSource {
+  id             String @id @default(cuid())
+  insightId      String
+  rawPostId      String
+  relevanceScore Float  @default(0)
+
+  insight Insight @relation(fields: [insightId], references: [id], onDelete: Cascade)
+  rawPost RawPost @relation(fields: [rawPostId], references: [id], onDelete: Cascade)
+
+  @@unique([insightId, rawPostId])
+}
+
+model Spec {
+  id        String     @id @default(cuid())
+  projectId String
+  title     String
+  content   String
+  format    SpecFormat @default(MARKDOWN)
+  version   Int        @default(1)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ScrapeJob {
+  id          String    @id @default(cuid())
+  sourceId    String
+  status      JobStatus @default(PENDING)
+  startedAt   DateTime?
+  completedAt DateTime?
+  error       String?
+  postsFound  Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([sourceId, status])
+}
