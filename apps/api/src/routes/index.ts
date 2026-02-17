@@ -4,6 +4,11 @@ import { projectsRouter } from './projects.js';
 import { sourcesRouter } from './sources.js';
 import { insightsRouter } from './insights.js';
 import { specsRouter } from './specs.js';
+import { categoriesRouter } from './categories.js';
+import { onboardingRouter } from './onboarding.js';
+import { discoverRouter } from './discover.js';
+import { savedRouter } from './saved.js';
+import { interestsRouter } from './interests.js';
 import { authMiddleware } from '../middleware/auth.js';
 
 export const router = Router();
@@ -17,6 +22,11 @@ router.get('/api/v1/health', (_req, res) => {
 });
 
 router.use('/api/v1/auth', authRouter);
+router.use('/api/v1/categories', categoriesRouter);
+router.use('/api/v1/onboarding', authMiddleware, onboardingRouter);
+router.use('/api/v1/discover', authMiddleware, discoverRouter);
+router.use('/api/v1/saved', authMiddleware, savedRouter);
+router.use('/api/v1/interests', authMiddleware, interestsRouter);
 router.use('/api/v1/projects', authMiddleware, projectsRouter);
 router.use('/api/v1/sources', authMiddleware, sourcesRouter);
 router.use('/api/v1/insights', authMiddleware, insightsRouter);

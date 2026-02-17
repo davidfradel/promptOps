@@ -35,6 +35,12 @@ vi.mock('../generation/spec-generator.js', () => ({
   generateSpec: vi.fn(),
 }));
 
+vi.mock('./jobs.js', () => ({
+  enqueueScrapeJob: vi.fn(),
+  enqueueAnalyzeJob: vi.fn(),
+  jobQueue: { add: vi.fn() },
+}));
+
 vi.mock('../../utils/logger.js', () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));

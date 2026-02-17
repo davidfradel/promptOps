@@ -4,10 +4,11 @@ import { AuthProvider } from './hooks/useAuth';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { ToastContainer } from './components/ui/Toast';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { OnboardingGuard } from './components/auth/OnboardingGuard';
 import { DashboardLayout } from './components/layout/DashboardLayout';
-import { Dashboard } from './pages/Dashboard';
-import { Projects } from './pages/Projects';
-import { ProjectDetail } from './pages/ProjectDetail';
+import { Discover } from './pages/Discover';
+import { SavedInsights } from './pages/SavedInsights';
+import { Onboarding } from './pages/Onboarding';
 import { Insights } from './pages/Insights';
 import { Specs } from './pages/Specs';
 import { Settings } from './pages/Settings';
@@ -26,15 +27,24 @@ export function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route
+                path="/onboarding"
                 element={
                   <ProtectedRoute>
-                    <DashboardLayout />
+                    <Onboarding />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <DashboardLayout />
+                    </OnboardingGuard>
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<Dashboard />} />
-                <Route path="/projects" element={<Projects />} />
-                <Route path="/projects/:id" element={<ProjectDetail />} />
+                <Route index element={<Discover />} />
+                <Route path="/saved" element={<SavedInsights />} />
                 <Route path="/insights" element={<Insights />} />
                 <Route path="/specs" element={<Specs />} />
                 <Route path="/settings" element={<Settings />} />

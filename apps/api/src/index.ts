@@ -4,12 +4,17 @@ import { logger } from './utils/logger.js';
 import { prisma } from './lib/prisma.js';
 import { redis } from './lib/redis.js';
 import { createWorker } from './services/queue/worker.js';
+import { startScheduler } from './services/scheduler.js';
 
 const server = app.listen(env.PORT, () => {
   logger.info({ port: env.PORT }, 'Server started');
 });
 
 const worker = createWorker();
+
+startScheduler().catch((err) => {
+  logger.error({ err }, 'Failed to start scheduler');
+});
 
 async function shutdown() {
   logger.info('Shutting down gracefully...');

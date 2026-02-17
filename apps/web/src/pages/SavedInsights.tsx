@@ -1,42 +1,43 @@
 import { useState, useCallback } from 'react';
-import { useSpecs } from '../hooks/useSpecs';
-import { useInterests } from '../hooks/useInterests';
+import { useSaved } from '../hooks/useSaved';
 import { useSpecGeneration } from '../hooks/useAnalysis';
-import { useToast } from '../hooks/useToast';
+import { useInterests } from '../hooks/useInterests';
 import { useSpecPolling } from '../hooks/useJobStatus';
-import { SpecViewer } from '../components/specs/SpecViewer';
-import { SpecExport } from '../components/specs/SpecExport';
+import { useToast } from '../hooks/useToast';
+import { DiscoverInsightCard } from '../components/discover/DiscoverInsightCard';
 import { Loading } from '../components/ui/Loading';
 import { Card } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { CATEGORIES } from '@promptops/shared';
 import { api } from '../lib/api.js';
 import type { Project } from '@promptops/shared';
 
-export function Specs() {
-  const { specs, loading, refetch } = useSpecs();
-  const { interests } = useInterests();
+export function SavedInsights() {
+  const { savedInsights, loading, unsaveInsight, refetch } = useSaved();
   const { generateSpec, loading: generating } = useSpecGeneration();
+  const { interests } = useInterests();
   const { addToast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [format, setFormat] = useState('MARKDOWN');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingSpecId, setPendingSpecId] = useState<string | null>(null);
 
   const handleSpecComplete = useCallback(() => {
     addToast({ type: 'success', message: 'Spec generation complete!' });
     setPendingSpecId(null);
-    refetch();
-  }, [addToast, refetch]);
+  }, [addToast]);
 
   const { polling: specPolling } = useSpecPolling(pendingSpecId, {
     onComplete: handleSpecComplete,
   });
 
-  const userCategories = CATEGORIES.filter((c) =>
-    interests.some((i) => i.category === c.value),
-  );
+  const handleUnsave = async (id: string) => {
+    try {
+      await unsaveInsight(id);
+      addToast({ type: 'info', message: 'Insight removed from saved' });
+    } catch {
+      addToast({ type: 'error', message: 'Failed to remove insight' });
+    }
+  };
 
   const handleGenerate = async () => {
     if (!selectedCategory) return;
@@ -52,23 +53,24 @@ export function Specs() {
       }
       const result = await generateSpec(project.id, format);
       const specId = (result as { id?: string } | null)?.id;
-      if (specId) {
-        setPendingSpecId(specId);
-      }
+      if (specId) setPendingSpecId(specId);
       addToast({ type: 'info', message: 'Spec generation started...' });
-      setTimeout(() => refetch(), 5000);
     } catch (err) {
       addToast({ type: 'error', message: err instanceof Error ? err.message : 'Failed to generate spec' });
     }
   };
 
-  if (loading) return <Loading message="Loading specs..." />;
+  const userCategories = CATEGORIES.filter((c) =>
+    interests.some((i) => i.category === c.value),
+  );
+
+  if (loading) return <Loading message="Loading saved insights..." />;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Specs</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Saved Insights</h1>
 
-      <Card title="Generate New Spec">
+      <Card title="Generate Spec from Insights">
         <div className="flex flex-wrap gap-2">
           <select
             value={selectedCategory}
@@ -90,46 +92,28 @@ export function Specs() {
             <option value="LINEAR">Linear</option>
           </select>
           <Button onClick={handleGenerate} disabled={generating || specPolling || !selectedCategory}>
-            {generating ? 'Queueing...' : specPolling ? 'Generating...' : 'Generate'}
+            {generating ? 'Queueing...' : specPolling ? 'Generating...' : 'Generate Spec'}
           </Button>
         </div>
       </Card>
 
-      {specs.length === 0 ? (
-        <p className="py-8 text-center text-gray-500">No specs generated yet.</p>
+      {savedInsights.length === 0 ? (
+        <div className="py-12 text-center">
+          <p className="text-gray-500">No saved insights yet.</p>
+          <p className="mt-1 text-sm text-gray-400">
+            Save interesting insights from the Discover page to build your spec.
+          </p>
+        </div>
       ) : (
         <div className="space-y-4">
-          {specs.map((spec) => {
-            const isGenerating = spec.content === 'Generating...';
-            return (
-              <Card key={spec.id}>
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">{spec.title}</h3>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="info">{spec.format}</Badge>
-                    {isGenerating ? (
-                      <Badge variant="warning">Generating...</Badge>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        onClick={() => setExpandedId(expandedId === spec.id ? null : spec.id)}
-                      >
-                        {expandedId === spec.id ? 'Collapse' : 'Expand'}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                {!isGenerating && expandedId === spec.id ? (
-                  <div className="mt-4 space-y-3">
-                    <SpecViewer spec={spec} />
-                    <SpecExport content={spec.content} title={spec.title} />
-                  </div>
-                ) : !isGenerating ? (
-                  <p className="mt-2 line-clamp-3 text-sm text-gray-500">{spec.content}</p>
-                ) : null}
-              </Card>
-            );
-          })}
+          {savedInsights.map((insight) => (
+            <DiscoverInsightCard
+              key={insight.id}
+              insight={insight}
+              onSave={() => {}}
+              onUnsave={handleUnsave}
+            />
+          ))}
         </div>
       )}
     </div>

@@ -2,9 +2,8 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: '📊' },
-  { to: '/projects', label: 'Projects', icon: '📁' },
-  { to: '/insights', label: 'Insights', icon: '💡' },
+  { to: '/', label: 'Discover', icon: '🔍' },
+  { to: '/saved', label: 'Saved', icon: '⭐' },
   { to: '/specs', label: 'Specs', icon: '📝' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },
 ];

@@ -27,3 +27,9 @@ export interface InsightSource {
   rawPostId: string;
   relevanceScore: number;
 }
+
+export interface DiscoverInsight extends Insight {
+  category: string | null;
+  isSaved: boolean;
+  projectName: string;
+}

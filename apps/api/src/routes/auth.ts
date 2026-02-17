@@ -19,8 +19,8 @@ const loginSchema = z.object({
   password: z.string(),
 });
 
-function sanitizeUser(user: { id: string; email: string; name: string | null; createdAt: Date; updatedAt: Date }) {
-  return { id: user.id, email: user.email, name: user.name, createdAt: user.createdAt, updatedAt: user.updatedAt };
+function sanitizeUser(user: { id: string; email: string; name: string | null; onboardedAt: Date | null; createdAt: Date; updatedAt: Date }) {
+  return { id: user.id, email: user.email, name: user.name, onboardedAt: user.onboardedAt, createdAt: user.createdAt, updatedAt: user.updatedAt };
 }
 
 authRouter.post('/register', async (req, res) => {

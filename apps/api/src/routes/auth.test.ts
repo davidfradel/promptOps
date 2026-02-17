@@ -76,6 +76,7 @@ describe('auth routes', () => {
         email: 'test@example.com',
         name: 'Test',
         passwordHash: 'hashed-password',
+        onboardedAt: null,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-01'),
       };
@@ -100,6 +101,7 @@ describe('auth routes', () => {
         email: 'test@example.com',
         name: null,
         passwordHash: 'hash',
+        onboardedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -130,6 +132,7 @@ describe('auth routes', () => {
         email: 'test@example.com',
         name: 'Test',
         passwordHash: 'hashed-password',
+        onboardedAt: null,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-01'),
       };
@@ -164,6 +167,7 @@ describe('auth routes', () => {
         email: 'test@example.com',
         name: null,
         passwordHash: 'hashed-password',
+        onboardedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -186,6 +190,7 @@ describe('auth routes', () => {
         email: 'test@example.com',
         name: 'Test',
         passwordHash: 'hashed-password',
+        onboardedAt: null,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-01'),
       };
