@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: '📊' },
@@ -9,6 +10,8 @@ const navItems = [
 ];
 
 export function Sidebar() {
+  const { user, logout } = useAuth();
+
   return (
     <aside className="flex h-screen w-64 flex-col bg-gray-900 text-white">
       <div className="flex h-16 items-center px-6">
@@ -33,6 +36,17 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
+      <div className="border-t border-gray-800 px-4 py-4">
+        <div className="mb-2 truncate text-sm text-gray-400">
+          {user?.name ?? user?.email}
+        </div>
+        <button
+          onClick={logout}
+          className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+        >
+          Sign out
+        </button>
+      </div>
     </aside>
   );
 }

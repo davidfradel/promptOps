@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { sendSuccess, sendCreated } from '../lib/response.js';
-import { NotFoundError, ValidationError } from '../lib/errors.js';
+import { NotFoundError, ValidationError, AuthError } from '../lib/errors.js';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, SpecFormat } from '@promptops/shared';
 import { enqueueGenerateJob } from '../services/queue/jobs.js';
 
@@ -24,10 +24,15 @@ const paginationSchema = z.object({
 specsRouter.get('/', async (req, res) => {
   const { cursor, limit, projectId } = paginationSchema.parse(req.query);
 
+  const where = {
+    project: { userId: req.userId },
+    ...(projectId ? { projectId } : {}),
+  };
+
   const specs = await prisma.spec.findMany({
     take: limit + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-    ...(projectId ? { where: { projectId } } : {}),
+    where,
     orderBy: { createdAt: 'desc' },
   });
 
@@ -41,7 +46,9 @@ specsRouter.get('/', async (req, res) => {
 });
 
 specsRouter.get('/:id', async (req, res) => {
-  const spec = await prisma.spec.findUnique({ where: { id: req.params['id'] } });
+  const spec = await prisma.spec.findFirst({
+    where: { id: req.params['id'], project: { userId: req.userId } },
+  });
   if (!spec) throw new NotFoundError('Spec', req.params['id']!);
   sendSuccess(res, spec);
 });
@@ -49,6 +56,11 @@ specsRouter.get('/:id', async (req, res) => {
 specsRouter.post('/', async (req, res) => {
   const result = createSpecSchema.safeParse(req.body);
   if (!result.success) throw new ValidationError(result.error.message);
+
+  const project = await prisma.project.findFirst({
+    where: { id: result.data.projectId, userId: req.userId },
+  });
+  if (!project) throw new AuthError('Project not found or access denied');
 
   const spec = await prisma.spec.create({ data: result.data });
   sendCreated(res, spec);
@@ -58,15 +70,25 @@ specsRouter.patch('/:id', async (req, res) => {
   const result = createSpecSchema.partial().safeParse(req.body);
   if (!result.success) throw new ValidationError(result.error.message);
 
+  const existing = await prisma.spec.findFirst({
+    where: { id: req.params['id'], project: { userId: req.userId } },
+  });
+  if (!existing) throw new NotFoundError('Spec', req.params['id']!);
+
   const spec = await prisma.spec.update({
-    where: { id: req.params['id'] },
+    where: { id: existing.id },
     data: result.data,
   });
   sendSuccess(res, spec);
 });
 
 specsRouter.delete('/:id', async (req, res) => {
-  await prisma.spec.delete({ where: { id: req.params['id'] } });
+  const existing = await prisma.spec.findFirst({
+    where: { id: req.params['id'], project: { userId: req.userId } },
+  });
+  if (!existing) throw new NotFoundError('Spec', req.params['id']!);
+
+  await prisma.spec.delete({ where: { id: existing.id } });
   sendSuccess(res, { deleted: true });
 });
 
@@ -82,8 +104,10 @@ specsRouter.post('/generate', async (req, res) => {
 
   const { projectId, format, title } = result.data;
 
-  // Verify project exists
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  // Verify project exists and belongs to user
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, userId: req.userId },
+  });
   if (!project) throw new NotFoundError('Project', projectId);
 
   // Create placeholder spec

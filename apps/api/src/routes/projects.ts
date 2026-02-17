@@ -28,6 +28,7 @@ projectsRouter.get('/', async (req, res) => {
   const projects = await prisma.project.findMany({
     take: limit + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    where: { userId: req.userId },
     orderBy: { createdAt: 'desc' },
   });
 
@@ -41,8 +42,8 @@ projectsRouter.get('/', async (req, res) => {
 });
 
 projectsRouter.get('/:id', async (req, res) => {
-  const project = await prisma.project.findUnique({
-    where: { id: req.params['id'] },
+  const project = await prisma.project.findFirst({
+    where: { id: req.params['id'], userId: req.userId },
     include: { sources: true, _count: { select: { insights: true, specs: true } } },
   });
 
@@ -55,7 +56,7 @@ projectsRouter.post('/', async (req, res) => {
   const result = createProjectSchema.safeParse(req.body);
   if (!result.success) throw new ValidationError(result.error.message);
 
-  const project = await prisma.project.create({ data: result.data });
+  const project = await prisma.project.create({ data: { ...result.data, userId: req.userId! } });
   sendCreated(res, project);
 });
 
@@ -63,8 +64,13 @@ projectsRouter.patch('/:id', async (req, res) => {
   const result = updateProjectSchema.safeParse(req.body);
   if (!result.success) throw new ValidationError(result.error.message);
 
+  const existing = await prisma.project.findFirst({
+    where: { id: req.params['id'], userId: req.userId },
+  });
+  if (!existing) throw new NotFoundError('Project', req.params['id']!);
+
   const project = await prisma.project.update({
-    where: { id: req.params['id'] },
+    where: { id: existing.id },
     data: result.data,
   });
 
@@ -72,12 +78,19 @@ projectsRouter.patch('/:id', async (req, res) => {
 });
 
 projectsRouter.delete('/:id', async (req, res) => {
-  await prisma.project.delete({ where: { id: req.params['id'] } });
+  const existing = await prisma.project.findFirst({
+    where: { id: req.params['id'], userId: req.userId },
+  });
+  if (!existing) throw new NotFoundError('Project', req.params['id']!);
+
+  await prisma.project.delete({ where: { id: existing.id } });
   sendSuccess(res, { deleted: true });
 });
 
 projectsRouter.post('/:id/analyze', async (req, res) => {
-  const project = await prisma.project.findUnique({ where: { id: req.params['id'] } });
+  const project = await prisma.project.findFirst({
+    where: { id: req.params['id'], userId: req.userId },
+  });
   if (!project) throw new NotFoundError('Project', req.params['id']!);
 
   const jobId = await enqueueAnalyzeJob(project.id);

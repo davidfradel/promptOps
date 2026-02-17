@@ -1,3 +1,4 @@
+export type { User, AuthTokens } from './types/user.js';
 export type { Project } from './types/project.js';
 export type { Insight, InsightSource } from './types/insight.js';
 export { InsightType } from './types/insight.js';

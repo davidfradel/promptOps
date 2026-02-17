@@ -20,6 +20,7 @@ insightsRouter.get('/', async (req, res) => {
   const { cursor, limit, projectId, type, minSeverity, tag } = querySchema.parse(req.query);
 
   const where = {
+    project: { userId: req.userId },
     ...(projectId ? { projectId } : {}),
     ...(type ? { type } : {}),
     ...(minSeverity !== undefined ? { severity: { gte: minSeverity } } : {}),
@@ -44,8 +45,8 @@ insightsRouter.get('/', async (req, res) => {
 });
 
 insightsRouter.get('/:id', async (req, res) => {
-  const insight = await prisma.insight.findUnique({
-    where: { id: req.params['id'] },
+  const insight = await prisma.insight.findFirst({
+    where: { id: req.params['id'], project: { userId: req.userId } },
     include: { insightSources: { include: { rawPost: true } } },
   });
 
@@ -65,8 +66,13 @@ insightsRouter.patch('/:id', async (req, res) => {
   const result = updateInsightSchema.safeParse(req.body);
   if (!result.success) throw new ValidationError(result.error.message);
 
+  const existing = await prisma.insight.findFirst({
+    where: { id: req.params['id'], project: { userId: req.userId } },
+  });
+  if (!existing) throw new NotFoundError('Insight', req.params['id']!);
+
   const insight = await prisma.insight.update({
-    where: { id: req.params['id'] },
+    where: { id: existing.id },
     data: result.data,
   });
 
@@ -74,6 +80,11 @@ insightsRouter.patch('/:id', async (req, res) => {
 });
 
 insightsRouter.delete('/:id', async (req, res) => {
-  await prisma.insight.delete({ where: { id: req.params['id'] } });
+  const existing = await prisma.insight.findFirst({
+    where: { id: req.params['id'], project: { userId: req.userId } },
+  });
+  if (!existing) throw new NotFoundError('Insight', req.params['id']!);
+
+  await prisma.insight.delete({ where: { id: existing.id } });
   sendSuccess(res, { deleted: true });
 });

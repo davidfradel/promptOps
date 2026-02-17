@@ -20,22 +20,22 @@ npm run dev:web                   # Frontend on :5173 (proxies /api to :3001)
 promptops/                        # npm workspaces monorepo
 ├── packages/shared/              # @promptops/shared — types, enums, constants
 ├── apps/api/                     # Express 5 + Prisma + BullMQ
-│   ├── prisma/schema.prisma      # 7 models, 4 enums
+│   ├── prisma/schema.prisma      # 8 models (User, Project, Source, RawPost, Insight, InsightSource, Spec, ScrapeJob), 4 enums
 │   └── src/
-│       ├── routes/               # REST endpoints (projects, sources, insights, specs)
+│       ├── routes/               # REST endpoints (auth, projects, sources, insights, specs)
 │       ├── services/
 │       │   ├── scraper/          # Reddit (JSON API), HackerNews (Firebase + Algolia)
 │       │   ├── analysis/         # Claude-powered: pain-points, competition, prioritization
 │       │   ├── generation/       # Spec generator (3 formats)
 │       │   └── queue/            # BullMQ jobs + worker
-│       ├── lib/                  # prisma, redis, response helpers, error classes
-│       ├── middleware/           # error-handler, rate-limiter
+│       ├── lib/                  # prisma, redis, auth (bcrypt+jwt), response helpers, error classes
+│       ├── middleware/           # error-handler, rate-limiter, auth (JWT bearer)
 │       └── utils/                # claude.ts (askClaude), logger.ts (pino)
 └── apps/web/                     # React 19 + Vite + Tailwind v4
     └── src/
-        ├── pages/                # Dashboard, ProjectDetail, Insights, Specs, Settings
-        ├── components/           # dashboard/, insights/, specs/, sources/, ui/, layout/
-        ├── hooks/                # useProjects, useInsights, useSpecs, useSources, useAnalysis
+        ├── pages/                # Dashboard, ProjectDetail, Insights, Specs, Settings, Login, Register
+        ├── components/           # auth/, dashboard/, insights/, specs/, sources/, ui/, layout/
+        ├── hooks/                # useAuth, useProjects, useInsights, useSpecs, useSources, useAnalysis
         └── lib/api.ts            # Fetch wrapper for /api/v1/*
 ```
 
@@ -46,6 +46,7 @@ promptops/                        # npm workspaces monorepo
 - **DB**: PostgreSQL 16 via Prisma ORM (cuid IDs, cascade deletes)
 - **Queue**: BullMQ on Redis 7, single `promptops` queue, concurrency 3
 - **AI**: Anthropic SDK, model `claude-sonnet-4-5-20250929`, structured JSON output
+- **Auth**: bcryptjs (12 rounds), jsonwebtoken (7d expiry), Bearer token auth
 - **Frontend**: React 19, React Router v7, Tailwind CSS v4, Recharts
 - **TypeScript**: Strict mode, `noUncheckedIndexedAccess`, `verbatimModuleSyntax`
 
@@ -55,9 +56,21 @@ promptops/                        # npm workspaces monorepo
 
 - All responses follow `ApiResponse<T>` shape: `{ data, error, meta }`
 - Response helpers: `sendSuccess(res, data, meta?)`, `sendCreated(res, data)`
-- Error classes: `NotFoundError`, `ValidationError`, `ConflictError`, `AppError`
+- Error classes: `AppError`, `NotFoundError`, `ValidationError`, `ConflictError`, `AuthError`
 - Pagination: cursor-based with `?cursor=&limit=` params
 - Routes validate input with Zod schemas before processing
+
+### Auth & Multi-tenancy
+
+- JWT Bearer tokens via `Authorization: Bearer <token>` header
+- `authMiddleware` verifies token, sets `req.userId` on all protected routes
+- Auth routes (`/api/v1/auth/*`) are public; all other routes require auth
+- `User` model: id, email (unique), passwordHash, name, timestamps
+- `Project.userId` foreign key — all data isolation flows through project ownership
+- Sources, insights, specs filter through `project: { userId: req.userId }` in Prisma queries
+- Frontend: `AuthProvider` context wraps app, stores token in localStorage, auto-validates on mount
+- `ProtectedRoute` component redirects to `/login` if not authenticated
+- `api.ts` client auto-attaches Bearer token and redirects to `/login` on 401
 
 ### Database
 
@@ -92,7 +105,13 @@ promptops/                        # npm workspaces monorepo
 
 ```
 GET    /api/v1/health
-GET    /api/v1/projects            # list (cursor pagination)
+
+POST   /api/v1/auth/register       # body: { email, password, name? } → { token, user }
+POST   /api/v1/auth/login          # body: { email, password } → { token, user }
+GET    /api/v1/auth/me             # current user (requires auth)
+
+# All routes below require Authorization: Bearer <token>
+GET    /api/v1/projects            # list (cursor pagination, filtered by userId)
 POST   /api/v1/projects            # create
 GET    /api/v1/projects/:id        # detail (includes sources, counts)
 PATCH  /api/v1/projects/:id        # update
@@ -143,6 +162,7 @@ npm run db:studio -w apps/api     # open Prisma Studio GUI
 | `DATABASE_URL` | yes | — | PostgreSQL connection string |
 | `REDIS_URL` | no | `redis://localhost:6379` | Redis for BullMQ |
 | `ANTHROPIC_API_KEY` | yes* | `''` | Claude API key (*required for analysis/generation) |
+| `JWT_SECRET` | no | `dev-secret-change-in-production` | Secret for JWT signing |
 | `PORT` | no | `3001` | API server port |
 | `NODE_ENV` | no | `development` | Environment |
 | `LOG_LEVEL` | no | `info` | Pino log level |
@@ -151,8 +171,8 @@ npm run db:studio -w apps/api     # open Prisma Studio GUI
 
 - **Phase 1** (done): Monorepo, Prisma schema, Express CRUD routes, BullMQ infra, React shell
 - **Phase 2** (done): Reddit + HN scrapers, Claude analysis pipeline, spec generation, queue worker routing, full frontend wiring
-- **Phase 3** — UX Complète: project creation form, project navigation (sidebar + clickable list), job status polling, toast notifications, error boundary + 404 page, fix export markdown, insights PATCH/DELETE routes
-- **Phase 4** — Tests & Qualité: Vitest setup, API route tests, service unit tests, worker tests, frontend hook/component tests, CI test scripts
-- **Phase 5** — Auth & Multi-tenancy: User model, JWT register/login, auth middleware, data isolation by userId, frontend login/register pages, route guards
+- **Phase 3** (done): UX — project creation form, navigation, job polling, toast notifications, error boundary, 404 page
+- **Phase 4** (done): Tests — Vitest setup, 22 API tests + 39 web tests (61 total)
+- **Phase 5** (done): Auth & Multi-tenancy — User model, JWT register/login, auth middleware, data isolation by userId, login/register pages, route guards
 - **Phase 6** — Features Avancées: scheduled recurring scrapes, ProductHunt scraper, Redis caching layer, CSV/PDF export, insight editing UI, analysis history, dashboard analytics over time
 - **Phase 7** — Déploiement & Production: Dockerfiles (API + web), docker-compose prod, GitHub Actions CI/CD, monitoring/metrics, security hardening, Prisma migrations workflow
