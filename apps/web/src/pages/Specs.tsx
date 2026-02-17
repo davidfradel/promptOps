@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useSpecs } from '../hooks/useSpecs';
 import { useProjects } from '../hooks/useProjects';
 import { useSpecGeneration } from '../hooks/useAnalysis';
+import { useToast } from '../hooks/useToast';
+import { useSpecPolling } from '../hooks/useJobStatus';
 import { SpecViewer } from '../components/specs/SpecViewer';
 import { SpecExport } from '../components/specs/SpecExport';
 import { Loading } from '../components/ui/Loading';
@@ -13,14 +15,36 @@ export function Specs() {
   const { specs, loading, refetch } = useSpecs();
   const { projects } = useProjects();
   const { generateSpec, loading: generating } = useSpecGeneration();
+  const { addToast } = useToast();
   const [selectedProject, setSelectedProject] = useState('');
   const [format, setFormat] = useState('MARKDOWN');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [pendingSpecId, setPendingSpecId] = useState<string | null>(null);
+
+  const handleSpecComplete = useCallback(() => {
+    addToast({ type: 'success', message: 'Spec generation complete!' });
+    setPendingSpecId(null);
+    refetch();
+  }, [addToast, refetch]);
+
+  const { polling: specPolling } = useSpecPolling(pendingSpecId, {
+    onComplete: handleSpecComplete,
+  });
 
   const handleGenerate = async () => {
     if (!selectedProject) return;
-    await generateSpec(selectedProject, format);
-    setTimeout(() => refetch(), 2000);
+    try {
+      const result = await generateSpec(selectedProject, format);
+      const specId = (result as { id?: string } | null)?.id;
+      if (specId) {
+        setPendingSpecId(specId);
+      }
+      addToast({ type: 'info', message: 'Spec generation started...' });
+      // Also do a delayed refetch as fallback
+      setTimeout(() => refetch(), 5000);
+    } catch (err) {
+      addToast({ type: 'error', message: err instanceof Error ? err.message : 'Failed to generate spec' });
+    }
   };
 
   if (loading) return <Loading message="Loading specs..." />;
@@ -50,8 +74,8 @@ export function Specs() {
             <option value="CLAUDE_CODE">Claude Code</option>
             <option value="LINEAR">Linear</option>
           </select>
-          <Button onClick={handleGenerate} disabled={generating || !selectedProject}>
-            {generating ? 'Generating...' : 'Generate'}
+          <Button onClick={handleGenerate} disabled={generating || specPolling || !selectedProject}>
+            {generating ? 'Queueing...' : specPolling ? 'Generating...' : 'Generate'}
           </Button>
         </div>
       </Card>
@@ -60,30 +84,37 @@ export function Specs() {
         <p className="py-8 text-center text-gray-500">No specs generated yet.</p>
       ) : (
         <div className="space-y-4">
-          {specs.map((spec) => (
-            <Card key={spec.id}>
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium text-gray-900">{spec.title}</h3>
-                <div className="flex items-center gap-2">
-                  <Badge variant="info">{spec.format}</Badge>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setExpandedId(expandedId === spec.id ? null : spec.id)}
-                  >
-                    {expandedId === spec.id ? 'Collapse' : 'Expand'}
-                  </Button>
+          {specs.map((spec) => {
+            const isGenerating = spec.content === 'Generating...';
+            return (
+              <Card key={spec.id}>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium text-gray-900">{spec.title}</h3>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="info">{spec.format}</Badge>
+                    {isGenerating ? (
+                      <Badge variant="warning">Generating...</Badge>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        onClick={() => setExpandedId(expandedId === spec.id ? null : spec.id)}
+                      >
+                        {expandedId === spec.id ? 'Collapse' : 'Expand'}
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-              {expandedId === spec.id ? (
-                <div className="mt-4 space-y-3">
-                  <SpecViewer spec={spec} />
-                  <SpecExport content={spec.content} />
-                </div>
-              ) : (
-                <p className="mt-2 line-clamp-3 text-sm text-gray-500">{spec.content}</p>
-              )}
-            </Card>
-          ))}
+                {!isGenerating && expandedId === spec.id ? (
+                  <div className="mt-4 space-y-3">
+                    <SpecViewer spec={spec} />
+                    <SpecExport content={spec.content} title={spec.title} />
+                  </div>
+                ) : !isGenerating ? (
+                  <p className="mt-2 line-clamp-3 text-sm text-gray-500">{spec.content}</p>
+                ) : null}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

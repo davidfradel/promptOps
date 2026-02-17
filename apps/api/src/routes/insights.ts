@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { sendSuccess } from '../lib/response.js';
-import { NotFoundError } from '../lib/errors.js';
+import { NotFoundError, ValidationError } from '../lib/errors.js';
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, InsightType, Platform } from '@promptops/shared';
 
 export const insightsRouter = Router();
@@ -51,4 +51,29 @@ insightsRouter.get('/:id', async (req, res) => {
 
   if (!insight) throw new NotFoundError('Insight', req.params['id']!);
   sendSuccess(res, insight);
+});
+
+const updateInsightSchema = z.object({
+  title: z.string().min(1).max(500).optional(),
+  description: z.string().optional(),
+  severity: z.number().min(0).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  tags: z.array(z.string()).optional(),
+});
+
+insightsRouter.patch('/:id', async (req, res) => {
+  const result = updateInsightSchema.safeParse(req.body);
+  if (!result.success) throw new ValidationError(result.error.message);
+
+  const insight = await prisma.insight.update({
+    where: { id: req.params['id'] },
+    data: result.data,
+  });
+
+  sendSuccess(res, insight);
+});
+
+insightsRouter.delete('/:id', async (req, res) => {
+  await prisma.insight.delete({ where: { id: req.params['id'] } });
+  sendSuccess(res, { deleted: true });
 });

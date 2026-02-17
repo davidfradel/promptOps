@@ -4,6 +4,7 @@ import { useProject } from '../hooks/useProjects';
 import { useInsights } from '../hooks/useInsights';
 import { useSources } from '../hooks/useSources';
 import { useAnalysis, useSpecGeneration } from '../hooks/useAnalysis';
+import { useToast } from '../hooks/useToast';
 import { InsightsList } from '../components/insights/InsightsList';
 import { CompetitorMatrix } from '../components/insights/CompetitorMatrix';
 import { SourceManager } from '../components/sources/SourceManager';
@@ -19,7 +20,9 @@ export function ProjectDetail() {
   const { sources } = useSources(id);
   const { triggerAnalysis, loading: analyzing } = useAnalysis();
   const { generateSpec, loading: generating } = useSpecGeneration();
+  const { addToast } = useToast();
   const [specFormat, setSpecFormat] = useState('MARKDOWN');
+  const [analysisQueued, setAnalysisQueued] = useState(false);
 
   if (projectLoading) return <Loading />;
 
@@ -28,12 +31,34 @@ export function ProjectDetail() {
   }
 
   const handleAnalyze = async () => {
-    await triggerAnalysis(id!);
-    setTimeout(() => refetchInsights(), 2000);
+    try {
+      await triggerAnalysis(id!);
+      setAnalysisQueued(true);
+      addToast({ type: 'info', message: 'Analysis started. This may take a minute...' });
+      // Poll for completion
+      const poll = setInterval(async () => {
+        const res = await refetchInsights();
+        // If we get insights back and analysis was queued, it's likely done
+        if (analysisQueued) {
+          setAnalysisQueued(false);
+          clearInterval(poll);
+          addToast({ type: 'success', message: 'Analysis complete! Insights updated.' });
+        }
+      }, 5000);
+      // Stop polling after 2 minutes max
+      setTimeout(() => { clearInterval(poll); setAnalysisQueued(false); }, 120000);
+    } catch (err) {
+      addToast({ type: 'error', message: err instanceof Error ? err.message : 'Analysis failed' });
+    }
   };
 
   const handleGenerateSpec = async () => {
-    await generateSpec(id!, specFormat);
+    try {
+      await generateSpec(id!, specFormat);
+      addToast({ type: 'info', message: 'Spec generation started. Check the Specs page shortly.' });
+    } catch (err) {
+      addToast({ type: 'error', message: err instanceof Error ? err.message : 'Spec generation failed' });
+    }
   };
 
   return (
@@ -55,8 +80,8 @@ export function ProjectDetail() {
 
       <Card title="Actions">
         <div className="flex flex-wrap gap-3">
-          <Button onClick={handleAnalyze} disabled={analyzing || sources.length === 0}>
-            {analyzing ? 'Analyzing...' : 'Run Analysis'}
+          <Button onClick={handleAnalyze} disabled={analyzing || analysisQueued || sources.length === 0}>
+            {analyzing ? 'Queueing...' : analysisQueued ? 'Analysis Running...' : 'Run Analysis'}
           </Button>
           <div className="flex gap-2">
             <select

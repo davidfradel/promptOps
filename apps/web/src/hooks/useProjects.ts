@@ -28,7 +28,20 @@ export function useProjects() {
 
   useEffect(() => { fetchProjects(); }, [fetchProjects]);
 
-  return { projects, meta, loading, error, refetch: fetchProjects };
+  const createProject = useCallback(async (data: { name: string; description?: string; keywords?: string[]; niche?: string }) => {
+    const res = await api.post<Project>('/projects', data);
+    if (res.error) throw new Error(res.error.message);
+    await fetchProjects();
+    return res.data;
+  }, [fetchProjects]);
+
+  const deleteProject = useCallback(async (id: string) => {
+    const res = await api.delete<{ deleted: boolean }>(`/projects/${id}`);
+    if (res.error) throw new Error(res.error.message);
+    await fetchProjects();
+  }, [fetchProjects]);
+
+  return { projects, meta, loading, error, refetch: fetchProjects, createProject, deleteProject };
 }
 
 export function useProject(id: string) {
