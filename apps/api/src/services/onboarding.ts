@@ -1,6 +1,6 @@
 import { prisma } from '../lib/prisma.js';
 import { CATEGORY_SOURCES } from '../data/category-sources.js';
-import { enqueueScrapeJob } from './queue/jobs.js';
+import { enqueueScrapeJob, enqueueAnalyzeJob } from './queue/jobs.js';
 import { logger } from '../utils/logger.js';
 
 const VALID_CATEGORIES = [
@@ -27,6 +27,7 @@ export async function completeOnboarding(userId: string, categories: string[]): 
   });
 
   // For each category, create project + sources + enqueue scrape jobs
+  const projectIds: string[] = [];
   for (const category of validCategories) {
     const project = await prisma.project.create({
       data: {
@@ -38,6 +39,7 @@ export async function completeOnboarding(userId: string, categories: string[]): 
         keywords: [category],
       },
     });
+    projectIds.push(project.id);
 
     const sources = CATEGORY_SOURCES[category];
     if (!sources) continue;
@@ -58,6 +60,12 @@ export async function completeOnboarding(userId: string, categories: string[]): 
       await enqueueScrapeJob(source.id);
       logger.info({ sourceId: source.id, scrapeJobId: scrapeJob.id, category }, 'Enqueued initial scrape job');
     }
+  }
+
+  // Auto-trigger analysis after scraping (2 min delay to let scrapes finish)
+  for (const projectId of projectIds) {
+    await enqueueAnalyzeJob(projectId);
+    logger.info({ projectId }, 'Enqueued post-onboarding analysis job');
   }
 
   // Mark user as onboarded
