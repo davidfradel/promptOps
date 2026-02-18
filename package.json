@@ -17,13 +17,25 @@
     "format:check": "prettier --check .",
     "test": "npm run test -w apps/api && npm run test -w apps/web",
     "test:api": "npm run test -w apps/api",
-    "test:web": "npm run test -w apps/web"
+    "test:web": "npm run test -w apps/web",
+    "prepare": "husky"
   },
   "engines": {
     "node": ">=20"
   },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,md,yml,yaml,css}": [
+      "prettier --write"
+    ]
+  },
   "devDependencies": {
     "eslint": "^10.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
     "typescript-eslint": "^8.56.0",
     "vitest": "^4.0.18"

@@ -78,39 +78,41 @@ promptops/                        # npm workspaces monorepo
 
 ## Tech Stack
 
-| Layer      | Technology                                              |
-| ---------- | ------------------------------------------------------- |
-| Runtime    | Node.js >= 20, ESM                                      |
-| API        | Express 5, Zod validation, Pino logging                 |
-| Database   | PostgreSQL 16 via Prisma ORM                             |
-| Queue      | BullMQ on Redis 7                                        |
-| AI         | Anthropic SDK (Claude Sonnet 4.5)                        |
-| Auth       | bcryptjs + jsonwebtoken (Bearer tokens, 7-day expiry)    |
-| Frontend   | React 19, React Router v7, Tailwind CSS v4, Recharts     |
+| Layer      | Technology                                                      |
+| ---------- | --------------------------------------------------------------- |
+| Runtime    | Node.js >= 20, ESM                                              |
+| API        | Express 5, Zod validation, Pino logging                         |
+| Database   | PostgreSQL 16 via Prisma ORM                                    |
+| Queue      | BullMQ on Redis 7                                               |
+| AI         | Anthropic SDK (Claude Sonnet 4.5)                               |
+| Auth       | bcryptjs + jsonwebtoken (Bearer tokens, 7-day expiry)           |
+| Frontend   | React 19, React Router v7, Tailwind CSS v4, Recharts            |
 | TypeScript | Strict mode, `noUncheckedIndexedAccess`, `verbatimModuleSyntax` |
 
 ## Environment Variables
 
-| Variable           | Required | Default                           | Description                      |
-| ------------------ | -------- | --------------------------------- | -------------------------------- |
-| `DATABASE_URL`     | Yes      | —                                 | PostgreSQL connection string     |
-| `REDIS_URL`        | No       | `redis://localhost:6379`          | Redis for BullMQ                 |
-| `ANTHROPIC_API_KEY`| Yes*     | —                                 | Claude API key (*for AI features)|
-| `JWT_SECRET`       | No       | `dev-secret-change-in-production` | Secret for JWT signing           |
-| `PORT`             | No       | `3001`                            | API server port                  |
-| `NODE_ENV`         | No       | `development`                     | Environment                      |
-| `LOG_LEVEL`        | No       | `info`                            | Pino log level                   |
-| `CORS_ORIGINS`     | No       | `*`                               | Allowed CORS origins             |
-| `SENTRY_DSN`       | No       | —                                 | Sentry error tracking DSN        |
+| Variable            | Required | Default                           | Description                        |
+| ------------------- | -------- | --------------------------------- | ---------------------------------- |
+| `DATABASE_URL`      | Yes      | —                                 | PostgreSQL connection string       |
+| `REDIS_URL`         | No       | `redis://localhost:6379`          | Redis for BullMQ                   |
+| `ANTHROPIC_API_KEY` | Yes\*    | —                                 | Claude API key (\*for AI features) |
+| `JWT_SECRET`        | No       | `dev-secret-change-in-production` | Secret for JWT signing             |
+| `PORT`              | No       | `3001`                            | API server port                    |
+| `NODE_ENV`          | No       | `development`                     | Environment                        |
+| `LOG_LEVEL`         | No       | `info`                            | Pino log level                     |
+| `CORS_ORIGINS`      | No       | `*`                               | Allowed CORS origins               |
+| `SENTRY_DSN`        | No       | —                                 | Sentry error tracking DSN          |
 
 ## API Endpoints
 
 ### Health
+
 ```
 GET    /api/v1/health
 ```
 
 ### Auth
+
 ```
 POST   /api/v1/auth/register       # { email, password, name? } → { token, user }
 POST   /api/v1/auth/login          # { email, password } → { token, user }
@@ -118,6 +120,7 @@ GET    /api/v1/auth/me             # Current user
 ```
 
 ### Projects (requires auth)
+
 ```
 GET    /api/v1/projects            # List (cursor pagination)
 POST   /api/v1/projects            # Create
@@ -128,6 +131,7 @@ POST   /api/v1/projects/:id/analyze  # Trigger AI analysis pipeline
 ```
 
 ### Sources (requires auth)
+
 ```
 GET    /api/v1/sources             # List (?projectId= filter)
 POST   /api/v1/sources             # Create
@@ -138,12 +142,14 @@ GET    /api/v1/sources/:id/jobs    # Scrape job history
 ```
 
 ### Insights (requires auth)
+
 ```
 GET    /api/v1/insights            # List (?projectId=&type=&minSeverity=&tag=)
 GET    /api/v1/insights/:id        # Detail (includes sources + raw posts)
 ```
 
 ### Specs (requires auth)
+
 ```
 GET    /api/v1/specs               # List (?projectId=)
 POST   /api/v1/specs               # Create
@@ -157,24 +163,24 @@ POST   /api/v1/specs/generate      # AI spec generation
 
 ### Scripts
 
-| Command                          | Description                          |
-| -------------------------------- | ------------------------------------ |
-| `npm run dev:api`                | Start API dev server                 |
-| `npm run dev:web`                | Start frontend dev server            |
-| `npm run build`                  | Build shared + API                   |
-| `npm run build -w apps/web`      | Build frontend (tsc + Vite)          |
-| `npm run lint`                   | ESLint                               |
-| `npm run format`                 | Prettier (write)                     |
-| `npm run format:check`           | Prettier (check)                     |
+| Command                     | Description                 |
+| --------------------------- | --------------------------- |
+| `npm run dev:api`           | Start API dev server        |
+| `npm run dev:web`           | Start frontend dev server   |
+| `npm run build`             | Build shared + API          |
+| `npm run build -w apps/web` | Build frontend (tsc + Vite) |
+| `npm run lint`              | ESLint                      |
+| `npm run format`            | Prettier (write)            |
+| `npm run format:check`      | Prettier (check)            |
 
 ### Database
 
-| Command                          | Description                          |
-| -------------------------------- | ------------------------------------ |
-| `npm run db:push -w apps/api`    | Push schema to DB (dev)              |
-| `npm run db:migrate -w apps/api` | Create migration                     |
-| `npm run db:generate -w apps/api`| Regenerate Prisma client             |
-| `npm run db:studio -w apps/api`  | Open Prisma Studio GUI               |
+| Command                           | Description              |
+| --------------------------------- | ------------------------ |
+| `npm run db:push -w apps/api`     | Push schema to DB (dev)  |
+| `npm run db:migrate -w apps/api`  | Create migration         |
+| `npm run db:generate -w apps/api` | Regenerate Prisma client |
+| `npm run db:studio -w apps/api`   | Open Prisma Studio GUI   |
 
 ## Testing
 
@@ -200,13 +206,13 @@ GitHub Actions runs on push/PR to `main`:
 
 ## Docker
 
-| Service    | Image         | Port  | Description                     |
-| ---------- | ------------- | ----- | ------------------------------- |
-| `postgres` | postgres:16   | 5432  | PostgreSQL database             |
-| `redis`    | redis:7       | 6379  | Redis for BullMQ job queue      |
-| `api`      | promptops-api | 3001  | Express API + BullMQ worker     |
-| `web`      | promptops-web | 80    | Nginx serving React frontend    |
-| `migrate`  | promptops-api | —     | One-shot Prisma migration runner|
+| Service    | Image         | Port | Description                      |
+| ---------- | ------------- | ---- | -------------------------------- |
+| `postgres` | postgres:16   | 5432 | PostgreSQL database              |
+| `redis`    | redis:7       | 6379 | Redis for BullMQ job queue       |
+| `api`      | promptops-api | 3001 | Express API + BullMQ worker      |
+| `web`      | promptops-web | 80   | Nginx serving React frontend     |
+| `migrate`  | promptops-api | —    | One-shot Prisma migration runner |
 
 Both `api` and `web` use multi-stage Docker builds for minimal production images.
 

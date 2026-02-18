@@ -494,7 +494,9 @@ describe('SavedInsights', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Copy to Clipboard' }));
 
       await waitFor(() => {
-        expect(writeText).toHaveBeenCalledWith('# Auth Improvements\n\nDetailed spec content here.');
+        expect(writeText).toHaveBeenCalledWith(
+          '# Auth Improvements\n\nDetailed spec content here.',
+        );
       });
       await waitFor(() => {
         expect(mockAddToast).toHaveBeenCalledWith({
@@ -527,16 +529,22 @@ describe('SavedInsights', () => {
 
       // Mock createElement and DOM methods AFTER render so React isn't affected
       const origCreateElement = document.createElement.bind(document);
-      const mockCreateElement = vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
-        if (tag === 'a') {
-          const el = origCreateElement('a');
-          el.click = mockClick;
-          return el;
-        }
-        return origCreateElement(tag);
-      });
-      const mockAppendChild = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
-      const mockRemoveChild = vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
+      const mockCreateElement = vi
+        .spyOn(document, 'createElement')
+        .mockImplementation((tag: string) => {
+          if (tag === 'a') {
+            const el = origCreateElement('a');
+            el.click = mockClick;
+            return el;
+          }
+          return origCreateElement(tag);
+        });
+      const mockAppendChild = vi
+        .spyOn(document.body, 'appendChild')
+        .mockImplementation((node) => node);
+      const mockRemoveChild = vi
+        .spyOn(document.body, 'removeChild')
+        .mockImplementation((node) => node);
 
       fireEvent.click(screen.getByRole('button', { name: 'Export Markdown' }));
 
