@@ -14,7 +14,9 @@ export function PainPointCard({ insight }: PainPointCardProps) {
           <h4 className="font-medium text-gray-900">{insight.title}</h4>
           <p className="mt-1 text-sm text-gray-500">{insight.description}</p>
         </div>
-        <Badge variant={insight.severity >= 7 ? 'danger' : insight.severity >= 4 ? 'warning' : 'default'}>
+        <Badge
+          variant={insight.severity >= 7 ? 'danger' : insight.severity >= 4 ? 'warning' : 'default'}
+        >
           Severity: {insight.severity}
         </Badge>
       </div>

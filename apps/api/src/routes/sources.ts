@@ -1,29 +1,15 @@
 import { Router } from 'express';
-import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { sendSuccess, sendCreated } from '../lib/response.js';
 import { NotFoundError, ValidationError, AuthError } from '../lib/errors.js';
-import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, Platform } from '@promptops/shared';
+import { createSourceSchema, sourcePaginationSchema, cuidParamSchema } from '@promptops/shared';
 import { enqueueScrapeJob } from '../services/queue/jobs.js';
 
 export const sourcesRouter = Router();
 
-const createSourceSchema = z.object({
-  projectId: z.string(),
-  platform: z.nativeEnum(Platform),
-  url: z.string().url(),
-  config: z.record(z.unknown()).optional(),
-});
-
-const paginationSchema = z.object({
-  cursor: z.string().optional(),
-  limit: z.coerce.number().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
-  projectId: z.string().optional(),
-});
-
 sourcesRouter.get('/', async (req, res) => {
-  const { cursor, limit, projectId } = paginationSchema.parse(req.query);
+  const { cursor, limit, projectId } = sourcePaginationSchema.parse(req.query);
 
   const where = {
     project: { userId: req.userId },
@@ -54,20 +40,24 @@ sourcesRouter.get('/', async (req, res) => {
 });
 
 sourcesRouter.get('/:id', async (req, res) => {
+  const { id } = cuidParamSchema.parse(req.params);
+
   const source = await prisma.source.findFirst({
-    where: { id: req.params['id'], project: { userId: req.userId } },
+    where: { id, project: { userId: req.userId } },
     include: { _count: { select: { rawPosts: true, scrapeJobs: true } } },
   });
 
-  if (!source) throw new NotFoundError('Source', req.params['id']!);
+  if (!source) throw new NotFoundError('Source', id);
   sendSuccess(res, source);
 });
 
 sourcesRouter.get('/:id/jobs', async (req, res) => {
+  const { id } = cuidParamSchema.parse(req.params);
+
   const source = await prisma.source.findFirst({
-    where: { id: req.params['id'], project: { userId: req.userId } },
+    where: { id, project: { userId: req.userId } },
   });
-  if (!source) throw new NotFoundError('Source', req.params['id']!);
+  if (!source) throw new NotFoundError('Source', id);
 
   const jobs = await prisma.scrapeJob.findMany({
     where: { sourceId: source.id },
@@ -88,26 +78,30 @@ sourcesRouter.post('/', async (req, res) => {
 
   const { config, ...rest } = result.data;
   const source = await prisma.source.create({
-    data: { ...rest, config: config as Prisma.InputJsonValue ?? undefined },
+    data: { ...rest, config: (config as Prisma.InputJsonValue) ?? undefined },
   });
   sendCreated(res, source);
 });
 
 sourcesRouter.delete('/:id', async (req, res) => {
+  const { id } = cuidParamSchema.parse(req.params);
+
   const source = await prisma.source.findFirst({
-    where: { id: req.params['id'], project: { userId: req.userId } },
+    where: { id, project: { userId: req.userId } },
   });
-  if (!source) throw new NotFoundError('Source', req.params['id']!);
+  if (!source) throw new NotFoundError('Source', id);
 
   await prisma.source.delete({ where: { id: source.id } });
   sendSuccess(res, { deleted: true });
 });
 
 sourcesRouter.post('/:id/scrape', async (req, res) => {
+  const { id } = cuidParamSchema.parse(req.params);
+
   const source = await prisma.source.findFirst({
-    where: { id: req.params['id'], project: { userId: req.userId } },
+    where: { id, project: { userId: req.userId } },
   });
-  if (!source) throw new NotFoundError('Source', req.params['id']!);
+  if (!source) throw new NotFoundError('Source', id);
 
   const job = await prisma.scrapeJob.create({
     data: { sourceId: source.id, status: 'PENDING' },

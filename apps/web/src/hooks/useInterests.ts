@@ -30,19 +30,22 @@ export function useInterests() {
     fetchInterests();
   }, [fetchInterests]);
 
-  const updateInterests = useCallback(async (add: string[], remove: string[]) => {
-    setUpdating(true);
-    setError(null);
-    try {
-      await api.patch('/interests', { add, remove });
-      await fetchInterests();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update interests');
-      throw err;
-    } finally {
-      setUpdating(false);
-    }
-  }, [fetchInterests]);
+  const updateInterests = useCallback(
+    async (add: string[], remove: string[]) => {
+      setUpdating(true);
+      setError(null);
+      try {
+        await api.patch('/interests', { add, remove });
+        await fetchInterests();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to update interests');
+        throw err;
+      } finally {
+        setUpdating(false);
+      }
+    },
+    [fetchInterests],
+  );
 
   return { interests, loading, updating, error, updateInterests, refetch: fetchInterests };
 }

@@ -49,7 +49,14 @@ describe('CompetitorMatrix', () => {
   it('filters only COMPETITOR type insights', () => {
     const insights: Insight[] = [
       makeInsight({ id: '1', type: 'PAIN_POINT', title: 'Not a competitor' }),
-      makeInsight({ id: '2', type: 'COMPETITOR', title: 'Real Competitor', tags: ['test'], confidence: 0.9, metadata: { threatLevel: 'LOW' } }),
+      makeInsight({
+        id: '2',
+        type: 'COMPETITOR',
+        title: 'Real Competitor',
+        tags: ['test'],
+        confidence: 0.9,
+        metadata: { threatLevel: 'LOW' },
+      }),
     ];
     render(<CompetitorMatrix insights={insights} />);
     expect(screen.queryByText('Not a competitor')).not.toBeInTheDocument();
@@ -57,17 +64,13 @@ describe('CompetitorMatrix', () => {
   });
 
   it('defaults threat level to MEDIUM when metadata is missing', () => {
-    const insights: Insight[] = [
-      makeInsight({ metadata: null }),
-    ];
+    const insights: Insight[] = [makeInsight({ metadata: null })];
     render(<CompetitorMatrix insights={insights} />);
     expect(screen.getByText('MEDIUM')).toBeInTheDocument();
   });
 
   it('displays tags as badges', () => {
-    const insights: Insight[] = [
-      makeInsight({ tags: ['enterprise', 'saas', 'b2b'] }),
-    ];
+    const insights: Insight[] = [makeInsight({ tags: ['enterprise', 'saas', 'b2b'] })];
     render(<CompetitorMatrix insights={insights} />);
     expect(screen.getByText('enterprise')).toBeInTheDocument();
     expect(screen.getByText('saas')).toBeInTheDocument();

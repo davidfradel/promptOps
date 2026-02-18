@@ -41,12 +41,13 @@ export function useJobPolling(
 
     const poll = async () => {
       try {
-        const res = await api.get<Array<{ id: string; status: string; error?: string; postsFound?: number }>>(pollUrl);
+        const res =
+          await api.get<Array<{ id: string; status: string; error?: string; postsFound?: number }>>(
+            pollUrl,
+          );
         if (!res.data || !Array.isArray(res.data)) return;
 
-        const job = state.jobId
-          ? res.data.find((j) => j.id === state.jobId)
-          : res.data[0];
+        const job = state.jobId ? res.data.find((j) => j.id === state.jobId) : res.data[0];
 
         if (!job) return;
 
@@ -109,7 +110,9 @@ export function useSpecPolling(
 
     const poll = async () => {
       try {
-        const res = await api.get<{ id: string; content: string; title: string }>(`/specs/${specId}`);
+        const res = await api.get<{ id: string; content: string; title: string }>(
+          `/specs/${specId}`,
+        );
         if (res.data && res.data.content !== 'Generating...') {
           stopPolling();
           onCompleteRef.current?.(res.data.content);

@@ -1,23 +1,8 @@
+import { z } from 'zod';
 import { prisma } from '../../lib/prisma.js';
 import { askClaude } from '../../utils/claude.js';
 import { logger } from '../../utils/logger.js';
-
-interface CompetitorInsight {
-  type: 'COMPETITOR';
-  title: string;
-  description: string;
-  severity: number;
-  confidence: number;
-  tags: string[];
-  sourcePostIds: string[];
-  metadata: {
-    competitorName: string;
-    strengths: string[];
-    weaknesses: string[];
-    marketPosition: string;
-    threatLevel: 'LOW' | 'MEDIUM' | 'HIGH';
-  };
-}
+import { competitorInsightSchema } from '@promptops/shared';
 
 export async function analyzeCompetition(projectId: string): Promise<void> {
   const project = await prisma.project.findUniqueOrThrow({ where: { id: projectId } });
@@ -77,10 +62,13 @@ Return ONLY a JSON array of competitor insights, no markdown fences.`;
     maxTokens: 8192,
   });
 
-  let competitors: CompetitorInsight[];
+  let competitors: z.infer<typeof competitorInsightSchema>[];
   try {
-    const cleaned = result.replace(/```(?:json)?\n?/g, '').replace(/```\s*$/g, '').trim();
-    competitors = JSON.parse(cleaned) as CompetitorInsight[];
+    const cleaned = result
+      .replace(/```(?:json)?\n?/g, '')
+      .replace(/```\s*$/g, '')
+      .trim();
+    competitors = z.array(competitorInsightSchema).parse(JSON.parse(cleaned));
   } catch (err) {
     logger.error({ err, result: result.slice(0, 500) }, 'Failed to parse competition analysis');
     throw new Error('Failed to parse competition analysis response');
@@ -100,9 +88,7 @@ Return ONLY a JSON array of competitor insights, no markdown fences.`;
       },
     });
 
-    const validPostIds = comp.sourcePostIds.filter((id) =>
-      posts.some((p) => p.id === id),
-    );
+    const validPostIds = comp.sourcePostIds.filter((id) => posts.some((p) => p.id === id));
 
     for (const rawPostId of validPostIds) {
       await prisma.insightSource.create({

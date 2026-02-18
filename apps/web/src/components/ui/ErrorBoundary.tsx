@@ -34,7 +34,12 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className="mb-4 text-sm text-gray-600">
               {this.state.error?.message ?? 'An unexpected error occurred.'}
             </p>
-            <Button onClick={() => { this.setState({ hasError: false, error: null }); window.location.href = '/'; }}>
+            <Button
+              onClick={() => {
+                this.setState({ hasError: false, error: null });
+                window.location.href = '/';
+              }}
+            >
               Back to Dashboard
             </Button>
           </Card>

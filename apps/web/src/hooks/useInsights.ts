@@ -8,28 +8,33 @@ export function useInsights(projectId?: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchInsights = useCallback(async (cursor?: string) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (projectId) params.set('projectId', projectId);
-      if (cursor) params.set('cursor', cursor);
-      const query = params.toString() ? `?${params.toString()}` : '';
-      const res = await api.get<Insight[]>(`/insights${query}`);
-      if (res.error) {
-        setError(res.error.message);
-      } else {
-        setInsights(res.data ?? []);
-        setMeta(res.meta);
+  const fetchInsights = useCallback(
+    async (cursor?: string) => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (projectId) params.set('projectId', projectId);
+        if (cursor) params.set('cursor', cursor);
+        const query = params.toString() ? `?${params.toString()}` : '';
+        const res = await api.get<Insight[]>(`/insights${query}`);
+        if (res.error) {
+          setError(res.error.message);
+        } else {
+          setInsights(res.data ?? []);
+          setMeta(res.meta);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch insights');
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch insights');
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId]);
+    },
+    [projectId],
+  );
 
-  useEffect(() => { fetchInsights(); }, [fetchInsights]);
+  useEffect(() => {
+    fetchInsights();
+  }, [fetchInsights]);
 
   return { insights, meta, loading, error, refetch: fetchInsights };
 }

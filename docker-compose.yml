@@ -52,7 +52,7 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-    command: npx prisma db push --schema apps/api/prisma/schema.prisma --skip-generate
+    command: npx prisma migrate deploy --schema apps/api/prisma/schema.prisma
     environment:
       DATABASE_URL: postgresql://promptops:promptops@postgres:5432/promptops
     depends_on:

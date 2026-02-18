@@ -24,26 +24,27 @@ vi.stubGlobal('fetch', mockFetch);
 function redditListing(posts: Array<{ id: string; title: string }>, after: string | null = null) {
   return {
     ok: true,
-    json: () => Promise.resolve({
-      data: {
-        children: posts.map((p) => ({
-          kind: 't3',
-          data: {
-            id: p.id,
-            title: p.title,
-            selftext: 'body text',
-            author: 'user1',
-            permalink: `/r/test/comments/${p.id}/`,
-            score: 42,
-            created_utc: 1700000000,
-            num_comments: 5,
-            url: `https://reddit.com/r/test/${p.id}`,
-            subreddit: 'test',
-          },
-        })),
-        after,
-      },
-    }),
+    json: () =>
+      Promise.resolve({
+        data: {
+          children: posts.map((p) => ({
+            kind: 't3',
+            data: {
+              id: p.id,
+              title: p.title,
+              selftext: 'body text',
+              author: 'user1',
+              permalink: `/r/test/comments/${p.id}/`,
+              score: 42,
+              created_utc: 1700000000,
+              num_comments: 5,
+              url: `https://reddit.com/r/test/${p.id}`,
+              subreddit: 'test',
+            },
+          })),
+          after,
+        },
+      }),
   };
 }
 
@@ -63,10 +64,12 @@ describe('scrapeReddit', () => {
   });
 
   it('should fetch posts from Reddit JSON API', async () => {
-    mockFetch.mockResolvedValueOnce(redditListing([
-      { id: 'abc1', title: 'Post 1' },
-      { id: 'abc2', title: 'Post 2' },
-    ]));
+    mockFetch.mockResolvedValueOnce(
+      redditListing([
+        { id: 'abc1', title: 'Post 1' },
+        { id: 'abc2', title: 'Post 2' },
+      ]),
+    );
 
     const count = await scrapeReddit('source-1');
 

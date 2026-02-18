@@ -12,7 +12,9 @@ export function CompetitorMatrix({ insights = [] }: CompetitorMatrixProps) {
   if (competitors.length === 0) {
     return (
       <Card title="Competitor Matrix">
-        <p className="text-sm text-gray-500">No competitor data yet. Run analysis to discover competitors.</p>
+        <p className="text-sm text-gray-500">
+          No competitor data yet. Run analysis to discover competitors.
+        </p>
       </Card>
     );
   }
@@ -39,8 +41,11 @@ export function CompetitorMatrix({ insights = [] }: CompetitorMatrixProps) {
                   <td className="py-2">
                     <Badge
                       variant={
-                        threatLevel === 'HIGH' ? 'danger' :
-                        threatLevel === 'LOW' ? 'success' : 'warning'
+                        threatLevel === 'HIGH'
+                          ? 'danger'
+                          : threatLevel === 'LOW'
+                            ? 'success'
+                            : 'warning'
                       }
                     >
                       {threatLevel}
@@ -50,7 +55,9 @@ export function CompetitorMatrix({ insights = [] }: CompetitorMatrixProps) {
                   <td className="py-2">
                     <div className="flex flex-wrap gap-1">
                       {comp.tags.slice(0, 3).map((tag) => (
-                        <Badge key={tag} variant="default">{tag}</Badge>
+                        <Badge key={tag} variant="default">
+                          {tag}
+                        </Badge>
                       ))}
                     </div>
                   </td>

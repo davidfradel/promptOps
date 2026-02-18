@@ -10,6 +10,9 @@ export type { CategoryInfo } from './types/category.js';
 export { Category, CATEGORIES } from './types/category.js';
 export * from './constants/index.js';
 
+// Schemas
+export * from './schemas/index.js';
+
 // API Response types
 export interface ApiError {
   message: string;

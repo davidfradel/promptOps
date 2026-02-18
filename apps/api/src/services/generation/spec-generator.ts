@@ -16,9 +16,7 @@ export async function generateSpec(projectId: string, specId?: string): Promise<
   });
 
   // If specId provided, load the spec to get its format
-  let spec = specId
-    ? await prisma.spec.findUnique({ where: { id: specId } })
-    : null;
+  const spec = specId ? await prisma.spec.findUnique({ where: { id: specId } }) : null;
 
   const format = spec?.format ?? 'MARKDOWN';
 

@@ -26,9 +26,7 @@ export function DiscoverInsightCard({ insight, onSave, onUnsave }: DiscoverInsig
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            {insight.category && (
-              <Badge variant="info">{insight.category.replace('_', '/')}</Badge>
-            )}
+            {insight.category && <Badge variant="info">{insight.category.replace('_', '/')}</Badge>}
             <Badge variant={typeVariants[insight.type] ?? 'default'}>
               {insight.type.replace('_', ' ')}
             </Badge>

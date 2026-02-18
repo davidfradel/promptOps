@@ -48,7 +48,11 @@ vi.mock('../../utils/logger.js', () => ({
 // Mock bullmq Worker to capture the processor function
 let capturedProcessor: ((job: unknown) => Promise<void>) | null = null;
 vi.mock('bullmq', () => {
-  const MockWorker = vi.fn(function (this: { on: ReturnType<typeof vi.fn> }, _name: string, processor: (job: unknown) => Promise<void>) {
+  const MockWorker = vi.fn(function (
+    this: { on: ReturnType<typeof vi.fn> },
+    _name: string,
+    processor: (job: unknown) => Promise<void>,
+  ) {
     capturedProcessor = processor;
     this.on = vi.fn();
   });
@@ -72,9 +76,15 @@ describe('worker', () => {
   });
 
   it('should route scrape jobs to Reddit scraper', async () => {
-    vi.mocked(prisma.scrapeJob.findFirst).mockResolvedValue({ id: 'job-1', status: 'PENDING' } as never);
+    vi.mocked(prisma.scrapeJob.findFirst).mockResolvedValue({
+      id: 'job-1',
+      status: 'PENDING',
+    } as never);
     vi.mocked(prisma.scrapeJob.update).mockResolvedValue({} as never);
-    vi.mocked(prisma.source.findUniqueOrThrow).mockResolvedValue({ id: 'src-1', platform: 'REDDIT' } as never);
+    vi.mocked(prisma.source.findUniqueOrThrow).mockResolvedValue({
+      id: 'src-1',
+      platform: 'REDDIT',
+    } as never);
     vi.mocked(scrapeReddit).mockResolvedValue(10);
 
     await capturedProcessor!({ name: 'scrape', id: 'q1', data: { sourceId: 'src-1' } });
@@ -83,9 +93,15 @@ describe('worker', () => {
   });
 
   it('should route scrape jobs to HN scraper', async () => {
-    vi.mocked(prisma.scrapeJob.findFirst).mockResolvedValue({ id: 'job-1', status: 'PENDING' } as never);
+    vi.mocked(prisma.scrapeJob.findFirst).mockResolvedValue({
+      id: 'job-1',
+      status: 'PENDING',
+    } as never);
     vi.mocked(prisma.scrapeJob.update).mockResolvedValue({} as never);
-    vi.mocked(prisma.source.findUniqueOrThrow).mockResolvedValue({ id: 'src-1', platform: 'HACKERNEWS' } as never);
+    vi.mocked(prisma.source.findUniqueOrThrow).mockResolvedValue({
+      id: 'src-1',
+      platform: 'HACKERNEWS',
+    } as never);
     vi.mocked(scrapeHackerNews).mockResolvedValue(5);
 
     await capturedProcessor!({ name: 'scrape', id: 'q1', data: { sourceId: 'src-1' } });
@@ -95,9 +111,15 @@ describe('worker', () => {
 
   it('should run analysis pipeline sequentially', async () => {
     const callOrder: string[] = [];
-    vi.mocked(extractPainPoints).mockImplementation(async () => { callOrder.push('painPoints'); });
-    vi.mocked(analyzeCompetition).mockImplementation(async () => { callOrder.push('competition'); });
-    vi.mocked(prioritizeInsights).mockImplementation(async () => { callOrder.push('prioritize'); });
+    vi.mocked(extractPainPoints).mockImplementation(async () => {
+      callOrder.push('painPoints');
+    });
+    vi.mocked(analyzeCompetition).mockImplementation(async () => {
+      callOrder.push('competition');
+    });
+    vi.mocked(prioritizeInsights).mockImplementation(async () => {
+      callOrder.push('prioritize');
+    });
 
     await capturedProcessor!({ name: 'analyze', id: 'q2', data: { projectId: 'proj-1' } });
 
@@ -105,21 +127,31 @@ describe('worker', () => {
   });
 
   it('should route generate jobs to spec generator', async () => {
-    await capturedProcessor!({ name: 'generate', id: 'q3', data: { projectId: 'proj-1', specId: 'spec-1' } });
+    await capturedProcessor!({
+      name: 'generate',
+      id: 'q3',
+      data: { projectId: 'proj-1', specId: 'spec-1' },
+    });
 
     expect(generateSpec).toHaveBeenCalledWith('proj-1', 'spec-1');
   });
 
   it('should throw on unknown job type', async () => {
-    await expect(
-      capturedProcessor!({ name: 'unknown', id: 'q4', data: {} }),
-    ).rejects.toThrow('Unknown job type: unknown');
+    await expect(capturedProcessor!({ name: 'unknown', id: 'q4', data: {} })).rejects.toThrow(
+      'Unknown job type: unknown',
+    );
   });
 
   it('should mark scrape job as FAILED on error', async () => {
-    vi.mocked(prisma.scrapeJob.findFirst).mockResolvedValue({ id: 'job-1', status: 'PENDING' } as never);
+    vi.mocked(prisma.scrapeJob.findFirst).mockResolvedValue({
+      id: 'job-1',
+      status: 'PENDING',
+    } as never);
     vi.mocked(prisma.scrapeJob.update).mockResolvedValue({} as never);
-    vi.mocked(prisma.source.findUniqueOrThrow).mockResolvedValue({ id: 'src-1', platform: 'REDDIT' } as never);
+    vi.mocked(prisma.source.findUniqueOrThrow).mockResolvedValue({
+      id: 'src-1',
+      platform: 'REDDIT',
+    } as never);
     vi.mocked(scrapeReddit).mockRejectedValue(new Error('API down'));
 
     await expect(

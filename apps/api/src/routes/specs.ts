@@ -1,28 +1,19 @@
 import { Router } from 'express';
-import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { sendSuccess, sendCreated } from '../lib/response.js';
 import { NotFoundError, ValidationError, AuthError } from '../lib/errors.js';
-import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, SpecFormat } from '@promptops/shared';
+import {
+  createSpecSchema,
+  generateSpecSchema,
+  specPaginationSchema,
+  cuidParamSchema,
+} from '@promptops/shared';
 import { enqueueGenerateJob } from '../services/queue/jobs.js';
 
 export const specsRouter = Router();
 
-const createSpecSchema = z.object({
-  projectId: z.string(),
-  title: z.string().min(1).max(500),
-  content: z.string(),
-  format: z.nativeEnum(SpecFormat).default('MARKDOWN'),
-});
-
-const paginationSchema = z.object({
-  cursor: z.string().optional(),
-  limit: z.coerce.number().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
-  projectId: z.string().optional(),
-});
-
 specsRouter.get('/', async (req, res) => {
-  const { cursor, limit, projectId } = paginationSchema.parse(req.query);
+  const { cursor, limit, projectId } = specPaginationSchema.parse(req.query);
 
   const where = {
     project: { userId: req.userId },
@@ -46,10 +37,12 @@ specsRouter.get('/', async (req, res) => {
 });
 
 specsRouter.get('/:id', async (req, res) => {
+  const { id } = cuidParamSchema.parse(req.params);
+
   const spec = await prisma.spec.findFirst({
-    where: { id: req.params['id'], project: { userId: req.userId } },
+    where: { id, project: { userId: req.userId } },
   });
-  if (!spec) throw new NotFoundError('Spec', req.params['id']!);
+  if (!spec) throw new NotFoundError('Spec', id);
   sendSuccess(res, spec);
 });
 
@@ -67,13 +60,15 @@ specsRouter.post('/', async (req, res) => {
 });
 
 specsRouter.patch('/:id', async (req, res) => {
+  const { id } = cuidParamSchema.parse(req.params);
+
   const result = createSpecSchema.partial().safeParse(req.body);
   if (!result.success) throw new ValidationError(result.error.message);
 
   const existing = await prisma.spec.findFirst({
-    where: { id: req.params['id'], project: { userId: req.userId } },
+    where: { id, project: { userId: req.userId } },
   });
-  if (!existing) throw new NotFoundError('Spec', req.params['id']!);
+  if (!existing) throw new NotFoundError('Spec', id);
 
   const spec = await prisma.spec.update({
     where: { id: existing.id },
@@ -83,19 +78,15 @@ specsRouter.patch('/:id', async (req, res) => {
 });
 
 specsRouter.delete('/:id', async (req, res) => {
+  const { id } = cuidParamSchema.parse(req.params);
+
   const existing = await prisma.spec.findFirst({
-    where: { id: req.params['id'], project: { userId: req.userId } },
+    where: { id, project: { userId: req.userId } },
   });
-  if (!existing) throw new NotFoundError('Spec', req.params['id']!);
+  if (!existing) throw new NotFoundError('Spec', id);
 
   await prisma.spec.delete({ where: { id: existing.id } });
   sendSuccess(res, { deleted: true });
-});
-
-const generateSpecSchema = z.object({
-  projectId: z.string(),
-  format: z.nativeEnum(SpecFormat).default('MARKDOWN'),
-  title: z.string().optional(),
 });
 
 specsRouter.post('/generate', async (req, res) => {

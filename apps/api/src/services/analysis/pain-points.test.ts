@@ -28,24 +28,47 @@ describe('extractPainPoints', () => {
 
   it('should extract insights from posts using Claude', async () => {
     vi.mocked(prisma.source.findMany).mockResolvedValue([
-      { id: 'src-1', projectId: 'proj-1', platform: 'REDDIT', url: 'https://reddit.com/r/test', config: null, createdAt: new Date(), updatedAt: new Date() },
+      {
+        id: 'src-1',
+        projectId: 'proj-1',
+        platform: 'REDDIT',
+        url: 'https://reddit.com/r/test',
+        config: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ]);
 
     vi.mocked(prisma.rawPost.findMany).mockResolvedValue([
-      { id: 'post-1', sourceId: 'src-1', externalId: 'ext1', platform: 'REDDIT', title: 'Auth is broken', body: 'Login fails constantly', author: 'user1', url: null, score: 100, postedAt: new Date(), metadata: null, createdAt: new Date() },
+      {
+        id: 'post-1',
+        sourceId: 'src-1',
+        externalId: 'ext1',
+        platform: 'REDDIT',
+        title: 'Auth is broken',
+        body: 'Login fails constantly',
+        author: 'user1',
+        url: null,
+        score: 100,
+        postedAt: new Date(),
+        metadata: null,
+        createdAt: new Date(),
+      },
     ]);
 
-    vi.mocked(askClaude).mockResolvedValue(JSON.stringify([
-      {
-        type: 'PAIN_POINT',
-        title: 'Authentication Issues',
-        description: 'Users report frequent login failures.',
-        severity: 0.8,
-        confidence: 0.9,
-        tags: ['auth', 'login'],
-        sourcePostIds: ['post-1'],
-      },
-    ]));
+    vi.mocked(askClaude).mockResolvedValue(
+      JSON.stringify([
+        {
+          type: 'PAIN_POINT',
+          title: 'Authentication Issues',
+          description: 'Users report frequent login failures.',
+          severity: 0.8,
+          confidence: 0.9,
+          tags: ['auth', 'login'],
+          sourcePostIds: ['post-1'],
+        },
+      ]),
+    );
 
     vi.mocked(prisma.insight.create).mockResolvedValue({ id: 'ins-1' } as never);
     vi.mocked(prisma.insightSource.create).mockResolvedValue({} as never);
@@ -73,10 +96,19 @@ describe('extractPainPoints', () => {
   it('should handle markdown-fenced responses', async () => {
     vi.mocked(prisma.source.findMany).mockResolvedValue([{ id: 'src-1' } as never]);
     vi.mocked(prisma.rawPost.findMany).mockResolvedValue([
-      { id: 'p1', sourceId: 'src-1', title: 'Test', body: '', score: 1, platform: 'REDDIT' } as never,
+      {
+        id: 'p1',
+        sourceId: 'src-1',
+        title: 'Test',
+        body: '',
+        score: 1,
+        platform: 'REDDIT',
+      } as never,
     ]);
 
-    vi.mocked(askClaude).mockResolvedValue('```json\n[{"type":"TREND","title":"AI Hype","description":"desc","severity":0.5,"confidence":0.7,"tags":["ai"],"sourcePostIds":[]}]\n```');
+    vi.mocked(askClaude).mockResolvedValue(
+      '```json\n[{"type":"TREND","title":"AI Hype","description":"desc","severity":0.5,"confidence":0.7,"tags":["ai"],"sourcePostIds":[]}]\n```',
+    );
     vi.mocked(prisma.insight.create).mockResolvedValue({ id: 'ins-1' } as never);
 
     await extractPainPoints('proj-1');

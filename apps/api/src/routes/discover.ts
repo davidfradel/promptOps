@@ -1,22 +1,13 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { sendSuccess } from '../lib/response.js';
-import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@promptops/shared';
+import { discoverQuerySchema } from '@promptops/shared';
 
 export const discoverRouter = Router();
 
 discoverRouter.get('/', async (req, res) => {
   const userId = req.userId!;
-  const {
-    category,
-    type,
-    minSeverity,
-    tag,
-    cursor,
-    limit: limitStr,
-  } = req.query as Record<string, string | undefined>;
-
-  const limit = Math.min(Number(limitStr) || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+  const { category, type, minSeverity, tag, cursor, limit } = discoverQuerySchema.parse(req.query);
 
   // Get user's interest categories
   const interests = await prisma.userInterest.findMany({
@@ -40,7 +31,7 @@ discoverRouter.get('/', async (req, res) => {
   };
 
   if (type) where['type'] = type;
-  if (minSeverity) where['severity'] = { gte: Number(minSeverity) };
+  if (minSeverity) where['severity'] = { gte: minSeverity };
   if (tag) where['tags'] = { has: tag };
   if (cursor) where['id'] = { lt: cursor };
 

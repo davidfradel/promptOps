@@ -10,9 +10,14 @@ import { analyzeCompetition } from '../analysis/competition.js';
 import { prioritizeInsights } from '../analysis/prioritization.js';
 import { generateSpec } from '../generation/spec-generator.js';
 import { enqueueScrapeJob, enqueueAnalyzeJob } from './jobs.js';
+import {
+  scrapeJobDataSchema,
+  analyzeJobDataSchema,
+  generateJobDataSchema,
+} from '@promptops/shared';
 
 async function handleScrape(job: Job): Promise<void> {
-  const { sourceId } = job.data as { sourceId: string };
+  const { sourceId } = scrapeJobDataSchema.parse(job.data);
 
   // Update ScrapeJob status to RUNNING
   const scrapeJob = await prisma.scrapeJob.findFirst({
@@ -64,7 +69,7 @@ async function handleScrape(job: Job): Promise<void> {
 }
 
 async function handleAnalyze(job: Job): Promise<void> {
-  const { projectId } = job.data as { projectId: string };
+  const { projectId } = analyzeJobDataSchema.parse(job.data);
 
   // Run sequentially: pain points → competition → prioritization
   await extractPainPoints(projectId);
@@ -73,7 +78,7 @@ async function handleAnalyze(job: Job): Promise<void> {
 }
 
 async function handleGenerate(job: Job): Promise<void> {
-  const { projectId, specId } = job.data as { projectId: string; specId: string };
+  const { projectId, specId } = generateJobDataSchema.parse(job.data);
   await generateSpec(projectId, specId);
 }
 

@@ -10,18 +10,49 @@ import { discoverRouter } from './discover.js';
 import { savedRouter } from './saved.js';
 import { interestsRouter } from './interests.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { authRateLimiter, aiRateLimiter } from '../middleware/rate-limiter.js';
+import { prisma } from '../lib/prisma.js';
+import { redis } from '../lib/redis.js';
 
 export const router = Router();
 
-router.get('/api/v1/health', (_req, res) => {
-  res.json({
-    data: { status: 'healthy', timestamp: new Date().toISOString() },
+router.get('/api/v1/health', async (_req, res) => {
+  const checks: Record<string, string> = {};
+  let healthy = true;
+
+  // Check Postgres
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    checks['postgres'] = 'ok';
+  } catch {
+    checks['postgres'] = 'down';
+    healthy = false;
+  }
+
+  // Check Redis
+  try {
+    await redis.ping();
+    checks['redis'] = 'ok';
+  } catch {
+    checks['redis'] = 'down';
+    healthy = false;
+  }
+
+  const status = healthy ? 'healthy' : 'degraded';
+  const statusCode = healthy ? 200 : 503;
+
+  res.status(statusCode).json({
+    data: { status, timestamp: new Date().toISOString(), checks },
     error: null,
     meta: null,
   });
 });
 
-router.use('/api/v1/auth', authRouter);
+// AI rate limiting for specific endpoints
+router.post('/api/v1/projects/:id/analyze', authMiddleware, aiRateLimiter);
+router.post('/api/v1/specs/generate', authMiddleware, aiRateLimiter);
+
+router.use('/api/v1/auth', authRateLimiter, authRouter);
 router.use('/api/v1/categories', categoriesRouter);
 router.use('/api/v1/onboarding', authMiddleware, onboardingRouter);
 router.use('/api/v1/discover', authMiddleware, discoverRouter);

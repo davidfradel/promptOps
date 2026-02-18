@@ -40,12 +40,15 @@ export function Onboarding() {
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900">What are you interested in?</h1>
           <p className="mt-2 text-gray-500">
-            Choose at least one category. We'll automatically find insights from relevant communities.
+            Choose at least one category. We'll automatically find insights from relevant
+            communities.
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 p-3 text-center text-sm text-red-600">{error}</div>
+          <div className="mb-4 rounded-lg bg-red-50 p-3 text-center text-sm text-red-600">
+            {error}
+          </div>
         )}
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">

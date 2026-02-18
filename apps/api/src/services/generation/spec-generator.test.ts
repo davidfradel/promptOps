@@ -36,7 +36,14 @@ describe('generateSpec', () => {
     } as never);
 
     vi.mocked(prisma.insight.findMany).mockResolvedValue([
-      { id: 'ins-1', type: 'PAIN_POINT', title: 'Auth Issues', description: 'Login broken', severity: 0.8, tags: ['auth'] },
+      {
+        id: 'ins-1',
+        type: 'PAIN_POINT',
+        title: 'Auth Issues',
+        description: 'Login broken',
+        severity: 0.8,
+        tags: ['auth'],
+      },
     ] as never);
   });
 
@@ -89,8 +96,14 @@ describe('generateSpec', () => {
 
   it('should use CLAUDE_CODE system prompt for that format', async () => {
     vi.mocked(prisma.spec.findUnique).mockResolvedValue({
-      id: 'spec-1', format: 'CLAUDE_CODE', title: 'Generating...', content: 'Generating...',
-      projectId: 'proj-1', version: 1, createdAt: new Date(), updatedAt: new Date(),
+      id: 'spec-1',
+      format: 'CLAUDE_CODE',
+      title: 'Generating...',
+      content: 'Generating...',
+      projectId: 'proj-1',
+      version: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     vi.mocked(askClaude).mockResolvedValue('# Architecture');
@@ -107,8 +120,14 @@ describe('generateSpec', () => {
 
   it('should use LINEAR system prompt for that format', async () => {
     vi.mocked(prisma.spec.findUnique).mockResolvedValue({
-      id: 'spec-1', format: 'LINEAR', title: 'Generating...', content: 'Generating...',
-      projectId: 'proj-1', version: 1, createdAt: new Date(), updatedAt: new Date(),
+      id: 'spec-1',
+      format: 'LINEAR',
+      title: 'Generating...',
+      content: 'Generating...',
+      projectId: 'proj-1',
+      version: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     vi.mocked(askClaude).mockResolvedValue('Issue 1');

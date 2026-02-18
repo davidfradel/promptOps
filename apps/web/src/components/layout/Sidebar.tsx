@@ -35,9 +35,7 @@ export function Sidebar() {
         ))}
       </nav>
       <div className="border-t border-gray-800 px-4 py-4">
-        <div className="mb-2 truncate text-sm text-gray-400">
-          {user?.name ?? user?.email}
-        </div>
+        <div className="mb-2 truncate text-sm text-gray-400">{user?.name ?? user?.email}</div>
         <button
           onClick={logout}
           className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"

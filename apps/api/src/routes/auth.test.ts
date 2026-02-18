@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import express, { type Request, type Response, type NextFunction } from 'express';
+import express from 'express';
 
 // Mock dependencies before importing anything that uses them
 vi.mock('../lib/prisma.js', () => ({
@@ -37,7 +37,13 @@ function createTestApp() {
 }
 
 // Lightweight request helper using Node http
-function request(app: express.Express, method: string, path: string, body?: unknown, headers?: Record<string, string>) {
+function request(
+  app: express.Express,
+  method: string,
+  path: string,
+  body?: unknown,
+  headers?: Record<string, string>,
+) {
   return new Promise<{ status: number; body: Record<string, unknown> }>((resolve) => {
     const server = app.listen(0, () => {
       const addr = server.address() as { port: number };
@@ -52,7 +58,11 @@ function request(app: express.Express, method: string, path: string, body?: unkn
       };
 
       fetch(`http://127.0.0.1:${addr.port}${path}`, opts)
-        .then((res) => res.json().then((json) => ({ status: res.status, body: json as Record<string, unknown> })))
+        .then((res) =>
+          res
+            .json()
+            .then((json) => ({ status: res.status, body: json as Record<string, unknown> })),
+        )
         .then((result) => {
           server.close();
           resolve(result);
@@ -91,7 +101,10 @@ describe('auth routes', () => {
 
       expect(res.status).toBe(201);
       expect(res.body.data).toHaveProperty('token', 'mock-jwt-token');
-      expect((res.body.data as Record<string, unknown>).user).toMatchObject({ email: 'test@example.com', name: 'Test' });
+      expect((res.body.data as Record<string, unknown>).user).toMatchObject({
+        email: 'test@example.com',
+        name: 'Test',
+      });
       expect((res.body.data as Record<string, unknown>).user).not.toHaveProperty('passwordHash');
     });
 
@@ -112,7 +125,9 @@ describe('auth routes', () => {
       });
 
       expect(res.status).toBe(409);
-      expect((res.body.error as Record<string, unknown>).message).toContain('Email already registered');
+      expect((res.body.error as Record<string, unknown>).message).toContain(
+        'Email already registered',
+      );
     });
 
     it('should reject short password', async () => {
@@ -146,7 +161,9 @@ describe('auth routes', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data).toHaveProperty('token', 'mock-jwt-token');
-      expect((res.body.data as Record<string, unknown>).user).toMatchObject({ email: 'test@example.com' });
+      expect((res.body.data as Record<string, unknown>).user).toMatchObject({
+        email: 'test@example.com',
+      });
     });
 
     it('should reject invalid email', async () => {

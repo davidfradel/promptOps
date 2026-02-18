@@ -157,15 +157,15 @@ npm run db:studio -w apps/api     # open Prisma Studio GUI
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_URL` | yes | — | PostgreSQL connection string |
-| `REDIS_URL` | no | `redis://localhost:6379` | Redis for BullMQ |
-| `ANTHROPIC_API_KEY` | yes* | `''` | Claude API key (*required for analysis/generation) |
-| `JWT_SECRET` | no | `dev-secret-change-in-production` | Secret for JWT signing |
-| `PORT` | no | `3001` | API server port |
-| `NODE_ENV` | no | `development` | Environment |
-| `LOG_LEVEL` | no | `info` | Pino log level |
+| Variable            | Required | Default                           | Description                                         |
+| ------------------- | -------- | --------------------------------- | --------------------------------------------------- |
+| `DATABASE_URL`      | yes      | —                                 | PostgreSQL connection string                        |
+| `REDIS_URL`         | no       | `redis://localhost:6379`          | Redis for BullMQ                                    |
+| `ANTHROPIC_API_KEY` | yes\*    | `''`                              | Claude API key (\*required for analysis/generation) |
+| `JWT_SECRET`        | no       | `dev-secret-change-in-production` | Secret for JWT signing                              |
+| `PORT`              | no       | `3001`                            | API server port                                     |
+| `NODE_ENV`          | no       | `development`                     | Environment                                         |
+| `LOG_LEVEL`         | no       | `info`                            | Pino log level                                      |
 
 ## Roadmap
 

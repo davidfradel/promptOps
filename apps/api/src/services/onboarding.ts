@@ -4,8 +4,17 @@ import { enqueueScrapeJob, enqueueAnalyzeJob } from './queue/jobs.js';
 import { logger } from '../utils/logger.js';
 
 const VALID_CATEGORIES = [
-  'SAAS', 'DEVTOOLS', 'AI_ML', 'FINTECH', 'ECOMMERCE',
-  'MOBILE', 'GAMING', 'HEALTH', 'EDUCATION', 'SOCIAL', 'SECURITY',
+  'SAAS',
+  'DEVTOOLS',
+  'AI_ML',
+  'FINTECH',
+  'ECOMMERCE',
+  'MOBILE',
+  'GAMING',
+  'HEALTH',
+  'EDUCATION',
+  'SOCIAL',
+  'SECURITY',
 ] as const;
 
 type Category = (typeof VALID_CATEGORIES)[number];
@@ -58,7 +67,10 @@ export async function completeOnboarding(userId: string, categories: string[]): 
       });
 
       await enqueueScrapeJob(source.id);
-      logger.info({ sourceId: source.id, scrapeJobId: scrapeJob.id, category }, 'Enqueued initial scrape job');
+      logger.info(
+        { sourceId: source.id, scrapeJobId: scrapeJob.id, category },
+        'Enqueued initial scrape job',
+      );
     }
   }
 

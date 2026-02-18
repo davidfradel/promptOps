@@ -16,9 +16,7 @@ export function Discover() {
   const { addToast } = useToast();
 
   // Filter CATEGORIES to only show user's interests
-  const userCategories = CATEGORIES.filter((c) =>
-    interests.some((i) => i.category === c.value),
-  );
+  const userCategories = CATEGORIES.filter((c) => interests.some((i) => i.category === c.value));
 
   const handleSave = async (id: string) => {
     try {
@@ -49,11 +47,7 @@ export function Discover() {
         </p>
       </div>
 
-      <FilterBar
-        filters={filters}
-        onFiltersChange={setFilters}
-        categories={userCategories}
-      />
+      <FilterBar filters={filters} onFiltersChange={setFilters} categories={userCategories} />
 
       {loading ? (
         <Loading message="Loading insights..." />

@@ -24,15 +24,21 @@ export function useSaved() {
     fetchSaved();
   }, [fetchSaved]);
 
-  const saveInsight = useCallback(async (insightId: string) => {
-    await api.post(`/saved/${insightId}`, {});
-    await fetchSaved();
-  }, [fetchSaved]);
+  const saveInsight = useCallback(
+    async (insightId: string) => {
+      await api.post(`/saved/${insightId}`, {});
+      await fetchSaved();
+    },
+    [fetchSaved],
+  );
 
-  const unsaveInsight = useCallback(async (insightId: string) => {
-    await api.delete(`/saved/${insightId}`);
-    await fetchSaved();
-  }, [fetchSaved]);
+  const unsaveInsight = useCallback(
+    async (insightId: string) => {
+      await api.delete(`/saved/${insightId}`);
+      await fetchSaved();
+    },
+    [fetchSaved],
+  );
 
   return { savedInsights, loading, error, saveInsight, unsaveInsight, refetch: fetchSaved };
 }

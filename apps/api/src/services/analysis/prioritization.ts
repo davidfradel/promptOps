@@ -1,13 +1,8 @@
+import { z } from 'zod';
 import { prisma } from '../../lib/prisma.js';
 import { askClaude } from '../../utils/claude.js';
 import { logger } from '../../utils/logger.js';
-
-interface PrioritizedInsight {
-  insightId: string;
-  severity: number;
-  confidence: number;
-  reasoning: string;
-}
+import { prioritizedInsightSchema } from '@promptops/shared';
 
 export async function prioritizeInsights(projectId: string): Promise<void> {
   const insights = await prisma.insight.findMany({
@@ -54,10 +49,13 @@ Return ONLY a JSON array, no markdown fences.`;
     maxTokens: 4096,
   });
 
-  let prioritized: PrioritizedInsight[];
+  let prioritized: z.infer<typeof prioritizedInsightSchema>[];
   try {
-    const cleaned = result.replace(/```(?:json)?\n?/g, '').replace(/```\s*$/g, '').trim();
-    prioritized = JSON.parse(cleaned) as PrioritizedInsight[];
+    const cleaned = result
+      .replace(/```(?:json)?\n?/g, '')
+      .replace(/```\s*$/g, '')
+      .trim();
+    prioritized = z.array(prioritizedInsightSchema).parse(JSON.parse(cleaned));
   } catch (err) {
     logger.error({ err, result: result.slice(0, 500) }, 'Failed to parse prioritization response');
     throw new Error('Failed to parse prioritization response');

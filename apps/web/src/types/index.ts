@@ -12,9 +12,4 @@ export type {
   PaginationParams,
 } from '@promptops/shared';
 
-export {
-  InsightType,
-  Platform,
-  JobStatus,
-  SpecFormat,
-} from '@promptops/shared';
+export { InsightType, Platform, JobStatus, SpecFormat } from '@promptops/shared';

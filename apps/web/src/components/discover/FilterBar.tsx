@@ -26,7 +26,9 @@ export function FilterBar({ filters, onFiltersChange, categories }: FilterBarPro
       >
         <option value="">All categories</option>
         {categories.map((cat) => (
-          <option key={cat.value} value={cat.value}>{cat.label}</option>
+          <option key={cat.value} value={cat.value}>
+            {cat.label}
+          </option>
         ))}
       </select>
 
@@ -36,7 +38,9 @@ export function FilterBar({ filters, onFiltersChange, categories }: FilterBarPro
         className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
       >
         {insightTypes.map((t) => (
-          <option key={t.value} value={t.value}>{t.label}</option>
+          <option key={t.value} value={t.value}>
+            {t.label}
+          </option>
         ))}
       </select>
 

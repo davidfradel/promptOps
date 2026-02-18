@@ -1,23 +1,13 @@
 import { Router } from 'express';
-import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { sendSuccess } from '../lib/response.js';
 import { NotFoundError, ValidationError } from '../lib/errors.js';
-import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, InsightType, Platform } from '@promptops/shared';
+import { insightQuerySchema, updateInsightSchema, cuidParamSchema } from '@promptops/shared';
 
 export const insightsRouter = Router();
 
-const querySchema = z.object({
-  cursor: z.string().optional(),
-  limit: z.coerce.number().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
-  projectId: z.string().optional(),
-  type: z.nativeEnum(InsightType).optional(),
-  minSeverity: z.coerce.number().optional(),
-  tag: z.string().optional(),
-});
-
 insightsRouter.get('/', async (req, res) => {
-  const { cursor, limit, projectId, type, minSeverity, tag } = querySchema.parse(req.query);
+  const { cursor, limit, projectId, type, minSeverity, tag } = insightQuerySchema.parse(req.query);
 
   const where = {
     project: { userId: req.userId },
@@ -45,31 +35,27 @@ insightsRouter.get('/', async (req, res) => {
 });
 
 insightsRouter.get('/:id', async (req, res) => {
+  const { id } = cuidParamSchema.parse(req.params);
+
   const insight = await prisma.insight.findFirst({
-    where: { id: req.params['id'], project: { userId: req.userId } },
+    where: { id, project: { userId: req.userId } },
     include: { insightSources: { include: { rawPost: true } } },
   });
 
-  if (!insight) throw new NotFoundError('Insight', req.params['id']!);
+  if (!insight) throw new NotFoundError('Insight', id);
   sendSuccess(res, insight);
 });
 
-const updateInsightSchema = z.object({
-  title: z.string().min(1).max(500).optional(),
-  description: z.string().optional(),
-  severity: z.number().min(0).optional(),
-  confidence: z.number().min(0).max(1).optional(),
-  tags: z.array(z.string()).optional(),
-});
-
 insightsRouter.patch('/:id', async (req, res) => {
+  const { id } = cuidParamSchema.parse(req.params);
+
   const result = updateInsightSchema.safeParse(req.body);
   if (!result.success) throw new ValidationError(result.error.message);
 
   const existing = await prisma.insight.findFirst({
-    where: { id: req.params['id'], project: { userId: req.userId } },
+    where: { id, project: { userId: req.userId } },
   });
-  if (!existing) throw new NotFoundError('Insight', req.params['id']!);
+  if (!existing) throw new NotFoundError('Insight', id);
 
   const insight = await prisma.insight.update({
     where: { id: existing.id },
@@ -80,10 +66,12 @@ insightsRouter.patch('/:id', async (req, res) => {
 });
 
 insightsRouter.delete('/:id', async (req, res) => {
+  const { id } = cuidParamSchema.parse(req.params);
+
   const existing = await prisma.insight.findFirst({
-    where: { id: req.params['id'], project: { userId: req.userId } },
+    where: { id, project: { userId: req.userId } },
   });
-  if (!existing) throw new NotFoundError('Insight', req.params['id']!);
+  if (!existing) throw new NotFoundError('Insight', id);
 
   await prisma.insight.delete({ where: { id: existing.id } });
   sendSuccess(res, { deleted: true });

@@ -47,11 +47,27 @@ describe('scrapeHackerNews', () => {
       // Item fetches
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ id: 101, title: 'Story 1', by: 'user1', score: 100, time: 1700000000, type: 'story' }),
+        json: () =>
+          Promise.resolve({
+            id: 101,
+            title: 'Story 1',
+            by: 'user1',
+            score: 100,
+            time: 1700000000,
+            type: 'story',
+          }),
       });
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ id: 102, title: 'Story 2', by: 'user2', score: 50, time: 1700000001, type: 'story' }),
+        json: () =>
+          Promise.resolve({
+            id: 102,
+            title: 'Story 2',
+            by: 'user2',
+            score: 50,
+            time: 1700000001,
+            type: 'story',
+          }),
       });
 
       const count = await scrapeHackerNews('source-1');
@@ -101,15 +117,32 @@ describe('scrapeHackerNews', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          hits: [
-            { objectID: 'a1', title: 'React 19', author: 'user1', points: 200, created_at: '2024-01-01T00:00:00Z', num_comments: 50, _tags: ['story'] },
-            { objectID: 'a2', title: 'Next.js 15', author: 'user2', points: 150, created_at: '2024-01-02T00:00:00Z', num_comments: 30, _tags: ['story'] },
-          ],
-          nbHits: 2,
-          page: 0,
-          nbPages: 1,
-        }),
+        json: () =>
+          Promise.resolve({
+            hits: [
+              {
+                objectID: 'a1',
+                title: 'React 19',
+                author: 'user1',
+                points: 200,
+                created_at: '2024-01-01T00:00:00Z',
+                num_comments: 50,
+                _tags: ['story'],
+              },
+              {
+                objectID: 'a2',
+                title: 'Next.js 15',
+                author: 'user2',
+                points: 150,
+                created_at: '2024-01-02T00:00:00Z',
+                num_comments: 30,
+                _tags: ['story'],
+              },
+            ],
+            nbHits: 2,
+            page: 0,
+            nbPages: 1,
+          }),
       });
 
       const count = await scrapeHackerNews('source-1');

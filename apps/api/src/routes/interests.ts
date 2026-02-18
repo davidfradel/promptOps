@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { sendSuccess } from '../lib/response.js';
 import { ValidationError } from '../lib/errors.js';
 import { CATEGORY_SOURCES } from '../data/category-sources.js';
 import { enqueueScrapeJob } from '../services/queue/jobs.js';
+import { updateInterestsSchema } from '@promptops/shared';
 
 export const interestsRouter = Router();
 
@@ -18,14 +18,9 @@ interestsRouter.get('/', async (req, res) => {
   sendSuccess(res, interests);
 });
 
-const updateSchema = z.object({
-  add: z.array(z.string()).default([]),
-  remove: z.array(z.string()).default([]),
-});
-
 // Update interests (add/remove categories)
 interestsRouter.patch('/', async (req, res) => {
-  const result = updateSchema.safeParse(req.body);
+  const result = updateInterestsSchema.safeParse(req.body);
   if (!result.success) throw new ValidationError(result.error.message);
 
   const userId = req.userId!;

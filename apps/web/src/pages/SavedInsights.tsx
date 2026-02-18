@@ -60,7 +60,10 @@ export function SavedInsights() {
       if (specId) setPendingSpecId(specId);
       addToast({ type: 'info', message: 'Spec generation started...' });
     } catch (err) {
-      addToast({ type: 'error', message: err instanceof Error ? err.message : 'Failed to generate spec' });
+      addToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Failed to generate spec',
+      });
     }
   };
 
@@ -81,9 +84,7 @@ export function SavedInsights() {
     URL.revokeObjectURL(url);
   };
 
-  const userCategories = CATEGORIES.filter((c) =>
-    interests.some((i) => i.category === c.value),
-  );
+  const userCategories = CATEGORIES.filter((c) => interests.some((i) => i.category === c.value));
 
   if (loading) return <Loading message="Loading saved insights..." />;
 
@@ -100,7 +101,9 @@ export function SavedInsights() {
           >
             <option value="">Select category...</option>
             {userCategories.map((c) => (
-              <option key={c.value} value={c.value}>{c.label}</option>
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
             ))}
           </select>
           <select
@@ -112,7 +115,10 @@ export function SavedInsights() {
             <option value="CLAUDE_CODE">Claude Code</option>
             <option value="LINEAR">Linear</option>
           </select>
-          <Button onClick={handleGenerate} disabled={generating || specPolling || !selectedCategory}>
+          <Button
+            onClick={handleGenerate}
+            disabled={generating || specPolling || !selectedCategory}
+          >
             {generating ? 'Queueing...' : specPolling ? 'Generating...' : 'Generate Spec'}
           </Button>
         </div>
@@ -155,7 +161,9 @@ export function SavedInsights() {
                     ) : (
                       <Button
                         variant="ghost"
-                        onClick={() => setExpandedSpecId(expandedSpecId === spec.id ? null : spec.id)}
+                        onClick={() =>
+                          setExpandedSpecId(expandedSpecId === spec.id ? null : spec.id)
+                        }
                       >
                         {expandedSpecId === spec.id ? 'Collapse' : 'Expand'}
                       </Button>
@@ -164,12 +172,17 @@ export function SavedInsights() {
                 </div>
                 {!isGenerating && expandedSpecId === spec.id ? (
                   <div className="mt-4 space-y-3">
-                    <pre className="whitespace-pre-wrap rounded-lg bg-gray-50 p-4 text-sm">{spec.content}</pre>
+                    <pre className="whitespace-pre-wrap rounded-lg bg-gray-50 p-4 text-sm">
+                      {spec.content}
+                    </pre>
                     <div className="flex gap-2">
                       <Button variant="secondary" onClick={() => handleCopy(spec.content)}>
                         Copy to Clipboard
                       </Button>
-                      <Button variant="ghost" onClick={() => handleExportMarkdown(spec.content, spec.title)}>
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleExportMarkdown(spec.content, spec.title)}
+                      >
                         Export Markdown
                       </Button>
                     </div>

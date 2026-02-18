@@ -33,7 +33,7 @@ export async function scrapeReddit(sourceId: string): Promise<number> {
   const limit = Math.min(config.limit ?? 100, 500);
 
   // Parse subreddit URL to get the base URL
-  let baseUrl = source.url.replace(/\/$/, '');
+  const baseUrl = source.url.replace(/\/$/, '');
   if (!baseUrl.includes('/r/')) {
     throw new Error(`Invalid subreddit URL: ${source.url}`);
   }

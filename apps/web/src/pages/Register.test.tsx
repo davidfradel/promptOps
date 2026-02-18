@@ -100,7 +100,9 @@ describe('Register', () => {
     fireEvent.change(screen.getByLabelText(/Name/), { target: { value: 'John' } });
     fireEvent.change(screen.getByLabelText(/Email/), { target: { value: 'john@example.com' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
-    fireEvent.change(screen.getByLabelText('Confirm password'), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText('Confirm password'), {
+      target: { value: 'password123' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     await waitFor(() => {
@@ -119,7 +121,9 @@ describe('Register', () => {
 
     fireEvent.change(screen.getByLabelText(/Email/), { target: { value: 'taken@example.com' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
-    fireEvent.change(screen.getByLabelText('Confirm password'), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText('Confirm password'), {
+      target: { value: 'password123' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     await waitFor(() => {
@@ -138,7 +142,9 @@ describe('Register', () => {
 
     fireEvent.change(screen.getByLabelText(/Email/), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
-    fireEvent.change(screen.getByLabelText('Confirm password'), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText('Confirm password'), {
+      target: { value: 'password123' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     await waitFor(() => {

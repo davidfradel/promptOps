@@ -9,7 +9,8 @@ export function useOnboarding() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.get<CategoryInfo[]>('/categories')
+    api
+      .get<CategoryInfo[]>('/categories')
       .then((res) => setCategories(res.data ?? []))
       .catch(() => setError('Failed to load categories'))
       .finally(() => setLoading(false));

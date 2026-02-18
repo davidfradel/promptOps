@@ -27,8 +27,9 @@ export function Settings() {
   };
 
   const toggleCategory = (value: string) => {
-    const isActive = activeCategories.includes(value) && !pendingRemove.includes(value)
-      || pendingAdd.includes(value);
+    const isActive =
+      (activeCategories.includes(value) && !pendingRemove.includes(value)) ||
+      pendingAdd.includes(value);
 
     if (isActive) {
       if (pendingAdd.includes(value)) {
@@ -60,8 +61,9 @@ export function Settings() {
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {CATEGORIES.map((cat) => {
-            const isActive = (activeCategories.includes(cat.value) && !pendingRemove.includes(cat.value))
-              || pendingAdd.includes(cat.value);
+            const isActive =
+              (activeCategories.includes(cat.value) && !pendingRemove.includes(cat.value)) ||
+              pendingAdd.includes(cat.value);
 
             return (
               <button
@@ -75,15 +77,11 @@ export function Settings() {
               >
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-900">{cat.label}</span>
-                  {activeCategories.includes(cat.value) && !pendingRemove.includes(cat.value) && !pendingAdd.includes(cat.value) && (
-                    <Badge variant="success">Active</Badge>
-                  )}
-                  {pendingAdd.includes(cat.value) && (
-                    <Badge variant="info">Adding</Badge>
-                  )}
-                  {pendingRemove.includes(cat.value) && (
-                    <Badge variant="danger">Removing</Badge>
-                  )}
+                  {activeCategories.includes(cat.value) &&
+                    !pendingRemove.includes(cat.value) &&
+                    !pendingAdd.includes(cat.value) && <Badge variant="success">Active</Badge>}
+                  {pendingAdd.includes(cat.value) && <Badge variant="info">Adding</Badge>}
+                  {pendingRemove.includes(cat.value) && <Badge variant="danger">Removing</Badge>}
                 </div>
               </button>
             );
@@ -96,7 +94,10 @@ export function Settings() {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => { setPendingAdd([]); setPendingRemove([]); }}
+              onClick={() => {
+                setPendingAdd([]);
+                setPendingRemove([]);
+              }}
             >
               Cancel
             </Button>

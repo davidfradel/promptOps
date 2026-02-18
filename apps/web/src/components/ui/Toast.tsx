@@ -9,8 +9,11 @@ export function ToastContainer() {
     <div className="fixed right-4 top-4 z-50 flex flex-col gap-2">
       {toasts.map((toast) => {
         const bgColor =
-          toast.type === 'success' ? 'bg-green-600' :
-          toast.type === 'error' ? 'bg-red-600' : 'bg-blue-600';
+          toast.type === 'success'
+            ? 'bg-green-600'
+            : toast.type === 'error'
+              ? 'bg-red-600'
+              : 'bg-blue-600';
         return (
           <div
             key={toast.id}

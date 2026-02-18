@@ -1,26 +1,29 @@
 import { Router } from 'express';
-import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { sendSuccess, sendCreated } from '../lib/response.js';
 import { ConflictError, AuthError } from '../lib/errors.js';
 import { hashPassword, comparePassword, signToken } from '../lib/auth.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { registerSchema, loginSchema } from '@promptops/shared';
 
 export const authRouter = Router();
 
-const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  name: z.string().optional(),
-});
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-});
-
-function sanitizeUser(user: { id: string; email: string; name: string | null; onboardedAt: Date | null; createdAt: Date; updatedAt: Date }) {
-  return { id: user.id, email: user.email, name: user.name, onboardedAt: user.onboardedAt, createdAt: user.createdAt, updatedAt: user.updatedAt };
+function sanitizeUser(user: {
+  id: string;
+  email: string;
+  name: string | null;
+  onboardedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}) {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    onboardedAt: user.onboardedAt,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
 }
 
 authRouter.post('/register', async (req, res) => {

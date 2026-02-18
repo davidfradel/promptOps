@@ -52,9 +52,11 @@ export async function scrapeHackerNews(sourceId: string): Promise<number> {
 
 async function scrapeFeed(sourceId: string, url: string, limit: number): Promise<number> {
   // Extract feed type from URL
-  const feedType = url.includes('topstories') ? 'topstories'
-    : url.includes('newstories') ? 'newstories'
-    : 'beststories';
+  const feedType = url.includes('topstories')
+    ? 'topstories'
+    : url.includes('newstories')
+      ? 'newstories'
+      : 'beststories';
 
   const response = await fetch(`${HN_API}/${feedType}.json`);
   if (!response.ok) throw new Error(`HN API error: ${response.status}`);
@@ -111,7 +113,12 @@ async function scrapeFeed(sourceId: string, url: string, limit: number): Promise
   return totalPosts;
 }
 
-async function scrapeSearch(sourceId: string, query: string, limit: number, tags?: string): Promise<number> {
+async function scrapeSearch(
+  sourceId: string,
+  query: string,
+  limit: number,
+  tags?: string,
+): Promise<number> {
   const url = new URL(`${ALGOLIA_API}/search`);
   url.searchParams.set('query', query);
   url.searchParams.set('hitsPerPage', String(Math.min(limit, 50)));

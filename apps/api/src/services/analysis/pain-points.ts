@@ -1,16 +1,8 @@
+import { z } from 'zod';
 import { prisma } from '../../lib/prisma.js';
 import { askClaude } from '../../utils/claude.js';
 import { logger } from '../../utils/logger.js';
-
-interface ClaudeInsight {
-  type: 'PAIN_POINT' | 'FEATURE_REQUEST' | 'TREND' | 'SENTIMENT';
-  title: string;
-  description: string;
-  severity: number;
-  confidence: number;
-  tags: string[];
-  sourcePostIds: string[];
-}
+import { claudeInsightSchema } from '@promptops/shared';
 
 export async function extractPainPoints(projectId: string): Promise<void> {
   const sources = await prisma.source.findMany({ where: { projectId } });
@@ -65,11 +57,14 @@ Return ONLY the JSON array, no markdown fences or other text.`;
     maxTokens: 8192,
   });
 
-  // Parse response, handling potential markdown fences
-  let insights: ClaudeInsight[];
+  // Parse and validate response
+  let insights: z.infer<typeof claudeInsightSchema>[];
   try {
-    const cleaned = result.replace(/```(?:json)?\n?/g, '').replace(/```\s*$/g, '').trim();
-    insights = JSON.parse(cleaned) as ClaudeInsight[];
+    const cleaned = result
+      .replace(/```(?:json)?\n?/g, '')
+      .replace(/```\s*$/g, '')
+      .trim();
+    insights = z.array(claudeInsightSchema).parse(JSON.parse(cleaned));
   } catch (err) {
     logger.error({ err, result: result.slice(0, 500) }, 'Failed to parse Claude response');
     throw new Error('Failed to parse pain points analysis response');
@@ -91,9 +86,7 @@ Return ONLY the JSON array, no markdown fences or other text.`;
     });
 
     // Link to source posts
-    const validPostIds = insight.sourcePostIds.filter((id) =>
-      posts.some((p) => p.id === id),
-    );
+    const validPostIds = insight.sourcePostIds.filter((id) => posts.some((p) => p.id === id));
 
     for (const rawPostId of validPostIds) {
       await prisma.insightSource.create({

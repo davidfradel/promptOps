@@ -4,5 +4,5 @@ dist/
 *.log
 .DS_Store
 coverage/
-apps/api/prisma/migrations/
+# apps/api/prisma/migrations/ — migrations are now versioned
 apps/api/generated/
