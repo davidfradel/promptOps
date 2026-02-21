@@ -62,3 +62,12 @@ router.use('/api/v1/projects', authMiddleware, projectsRouter);
 router.use('/api/v1/sources', authMiddleware, sourcesRouter);
 router.use('/api/v1/insights', authMiddleware, insightsRouter);
 router.use('/api/v1/specs', authMiddleware, specsRouter);
+
+// API 404 catch-all — return JSON instead of SPA fallback
+router.all('/api/v1/*', (_req, res) => {
+  res.status(404).json({
+    data: null,
+    error: { message: 'API endpoint not found' },
+    meta: null,
+  });
+});
