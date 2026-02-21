@@ -1,6 +1,7 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm ci && npm run build:railway"
+buildCommand = "npm install && npm run build:railway"
+nixpacksConfigPath = "nixpacks.toml"
 
 [deploy]
 startCommand = "npx prisma migrate deploy --schema apps/api/prisma/schema.prisma && npx tsx apps/api/prisma/seed.ts && node apps/api/dist/index.js"
