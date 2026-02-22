@@ -151,7 +151,7 @@ export function createWorker(): Worker {
           throw new Error(`Unknown job type: ${job.name}`);
       }
     },
-    { connection: redis as never, concurrency: 3 },
+    { connection: redis as never, concurrency: 1 },
   );
 
   worker.on('failed', (job, err) => {

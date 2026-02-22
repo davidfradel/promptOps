@@ -16,11 +16,22 @@ import { redis } from '../lib/redis.js';
 
 export const router = Router();
 
+let healthCache: { status: string; checks: Record<string, string>; timestamp: string } | null =
+  null;
+let healthCacheAt = 0;
+const HEALTH_CACHE_TTL = 30_000; // 30 seconds
+
 router.get('/api/v1/health', async (_req, res) => {
+  const now = Date.now();
+  if (healthCache && now - healthCacheAt < HEALTH_CACHE_TTL) {
+    const statusCode = healthCache.status === 'healthy' ? 200 : 503;
+    res.status(statusCode).json({ data: healthCache, error: null, meta: null });
+    return;
+  }
+
   const checks: Record<string, string> = {};
   let healthy = true;
 
-  // Check Postgres
   try {
     await prisma.$queryRaw`SELECT 1`;
     checks['postgres'] = 'ok';
@@ -29,7 +40,6 @@ router.get('/api/v1/health', async (_req, res) => {
     healthy = false;
   }
 
-  // Check Redis
   try {
     await redis.ping();
     checks['redis'] = 'ok';
@@ -41,11 +51,10 @@ router.get('/api/v1/health', async (_req, res) => {
   const status = healthy ? 'healthy' : 'degraded';
   const statusCode = healthy ? 200 : 503;
 
-  res.status(statusCode).json({
-    data: { status, timestamp: new Date().toISOString(), checks },
-    error: null,
-    meta: null,
-  });
+  healthCache = { status, timestamp: new Date().toISOString(), checks };
+  healthCacheAt = now;
+
+  res.status(statusCode).json({ data: healthCache, error: null, meta: null });
 });
 
 // AI rate limiting for specific endpoints

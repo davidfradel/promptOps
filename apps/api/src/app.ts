@@ -29,7 +29,12 @@ app.use(
 );
 app.use(rateLimiter);
 app.use(express.json({ limit: '100kb' }));
-app.use(pinoHttp({ logger }));
+app.use(
+  pinoHttp({
+    logger,
+    autoLogging: env.NODE_ENV !== 'production',
+  }),
+);
 
 app.use(router);
 
