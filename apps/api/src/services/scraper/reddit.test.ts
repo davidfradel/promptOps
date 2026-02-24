@@ -8,6 +8,8 @@ vi.mock('../../lib/prisma.js', () => ({
     },
     rawPost: {
       upsert: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
+      update: vi.fn().mockResolvedValue({} as never),
     },
   },
 }));

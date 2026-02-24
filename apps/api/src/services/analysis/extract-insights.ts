@@ -42,6 +42,20 @@ export async function extractInsightsAndCompetitors(projectId: string): Promise<
     }
   }
 
+  // Re-sort by engagement (score + comment activity) to surface high-discussion posts
+  type PostMeta = {
+    numComments?: number;
+    descendants?: number;
+    commentsCount?: number;
+    topComments?: string[];
+  };
+  const getEngagement = (p: (typeof posts)[0]) => {
+    const meta = (p.metadata as PostMeta | null) ?? {};
+    const comments = meta.numComments ?? meta.descendants ?? meta.commentsCount ?? 0;
+    return (p.score ?? 0) + comments * 2;
+  };
+  posts.sort((a, b) => getEngagement(b) - getEngagement(a));
+
   // Keep top 50 for cost efficiency
   posts = posts.slice(0, 50);
 
@@ -61,13 +75,30 @@ export async function extractInsightsAndCompetitors(projectId: string): Promise<
     return;
   }
 
-  const postSummaries = posts.map((p) => ({
-    id: p.id,
-    title: p.title ?? '',
-    body: (p.body ?? '').slice(0, 1500),
-    score: p.score ?? 0,
-    platform: p.platform,
-  }));
+  const postSummaries = posts.map((p) => {
+    const meta = (p.metadata as PostMeta | null) ?? {};
+    const numComments = meta.numComments ?? meta.descendants ?? meta.commentsCount ?? 0;
+    const topComments = meta.topComments;
+
+    let body = (p.body ?? '').slice(0, 1500);
+    // Include top community comments for high-engagement posts (big signal, small token cost)
+    if (topComments && topComments.length > 0 && numComments >= 15) {
+      const snippets = topComments
+        .slice(0, 2)
+        .map((c) => c.slice(0, 300))
+        .join(' | ');
+      body += `\n[Community responses: ${snippets}]`;
+    }
+
+    return {
+      id: p.id,
+      title: p.title ?? '',
+      body,
+      score: p.score ?? 0,
+      comments: numComments,
+      platform: p.platform,
+    };
+  });
 
   const systemPrompt = `You are a product research and competitive intelligence analyst. Analyze the following community posts for the project described below.
 

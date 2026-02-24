@@ -14,6 +14,7 @@ interface HNItem {
   time?: number;
   type?: string;
   descendants?: number;
+  kids?: number[]; // Child comment IDs (top-level only)
 }
 
 interface AlgoliaHit {
@@ -93,11 +94,17 @@ async function scrapeFeed(sourceId: string, url: string, limit: number): Promise
           url: item.url ?? `https://news.ycombinator.com/item?id=${item.id}`,
           score: item.score ?? 0,
           postedAt: item.time ? new Date(item.time * 1000) : null,
-          metadata: { descendants: item.descendants ?? 0 },
+          metadata: {
+            descendants: item.descendants ?? 0,
+            kids: item.kids?.slice(0, 5), // Store top 5 comment IDs for later enrichment
+          },
         },
         update: {
           score: item.score ?? 0,
-          metadata: { descendants: item.descendants ?? 0 },
+          metadata: {
+            descendants: item.descendants ?? 0,
+            kids: item.kids?.slice(0, 5),
+          },
         },
       });
       totalPosts++;
@@ -108,6 +115,8 @@ async function scrapeFeed(sourceId: string, url: string, limit: number): Promise
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
   }
+
+  await enrichTopPostsWithComments(sourceId);
 
   logger.info({ sourceId, totalPosts, feedType }, 'HN feed scrape completed');
   return totalPosts;
@@ -165,4 +174,71 @@ async function scrapeSearch(
 
   logger.info({ sourceId, totalPosts, query }, 'HN search scrape completed');
   return totalPosts;
+}
+
+// Fetch top comments for the most engaged HN stories and store in metadata.
+// Uses kids IDs stored during feed scraping — no-op for search mode (no kids available).
+async function enrichTopPostsWithComments(sourceId: string): Promise<void> {
+  type HNPostMeta = { descendants?: number; kids?: number[]; topComments?: string[] };
+
+  const posts = await prisma.rawPost.findMany({
+    where: { sourceId, platform: 'HACKERNEWS' },
+    orderBy: { score: 'desc' },
+    take: 100,
+  });
+
+  // Rank by engagement; skip posts without kids or already enriched
+  const toEnrich = posts
+    .map((p) => ({ ...p, meta: (p.metadata as HNPostMeta | null) ?? {} }))
+    .filter(
+      (p) =>
+        (p.meta.descendants ?? 0) >= 10 && !p.meta.topComments && (p.meta.kids?.length ?? 0) > 0,
+    )
+    .sort((a, b) => {
+      const engA = (a.score ?? 0) + (a.meta.descendants ?? 0) * 3;
+      const engB = (b.score ?? 0) + (b.meta.descendants ?? 0) * 3;
+      return engB - engA;
+    })
+    .slice(0, 8);
+
+  for (const post of toEnrich) {
+    const kidIds = post.meta.kids?.slice(0, 3) ?? [];
+    if (kidIds.length === 0) continue;
+
+    try {
+      const topComments: string[] = [];
+
+      for (const kidId of kidIds) {
+        const res = await fetch(`${HN_API}/item/${kidId}.json`);
+        if (!res.ok) continue;
+        const comment = (await res.json()) as HNItem;
+
+        if (comment.type === 'comment' && comment.text) {
+          // Strip HTML tags from HN comment bodies
+          const clean = comment.text
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&gt;/g, '>')
+            .replace(/&lt;/g, '<')
+            .replace(/&#x27;/g, "'")
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 400);
+          if (clean.length > 30) topComments.push(clean);
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+
+      if (topComments.length > 0) {
+        await prisma.rawPost.update({
+          where: { id: post.id },
+          data: { metadata: { ...post.meta, topComments } },
+        });
+        logger.debug({ postId: post.id, count: topComments.length }, 'HN comments enriched');
+      }
+    } catch (err) {
+      logger.warn({ postId: post.id, err }, 'Failed to enrich HN post with comments');
+    }
+  }
 }
