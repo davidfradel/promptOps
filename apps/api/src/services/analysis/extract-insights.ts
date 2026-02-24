@@ -44,14 +44,16 @@ export async function extractInsightsAndCompetitors(projectId: string): Promise<
 
   // Re-sort by engagement (score + comment activity) to surface high-discussion posts
   type PostMeta = {
-    numComments?: number;
-    descendants?: number;
-    commentsCount?: number;
+    numComments?: number; // Reddit, HN search
+    descendants?: number; // HN feed
+    commentsCount?: number; // ProductHunt
+    comments?: number; // GitHub
     topComments?: string[];
   };
   const getEngagement = (p: (typeof posts)[0]) => {
     const meta = (p.metadata as PostMeta | null) ?? {};
-    const comments = meta.numComments ?? meta.descendants ?? meta.commentsCount ?? 0;
+    const comments =
+      meta.numComments ?? meta.descendants ?? meta.commentsCount ?? meta.comments ?? 0;
     return (p.score ?? 0) + comments * 2;
   };
   posts.sort((a, b) => getEngagement(b) - getEngagement(a));
@@ -77,7 +79,8 @@ export async function extractInsightsAndCompetitors(projectId: string): Promise<
 
   const postSummaries = posts.map((p) => {
     const meta = (p.metadata as PostMeta | null) ?? {};
-    const numComments = meta.numComments ?? meta.descendants ?? meta.commentsCount ?? 0;
+    const numComments =
+      meta.numComments ?? meta.descendants ?? meta.commentsCount ?? meta.comments ?? 0;
     const topComments = meta.topComments;
 
     let body = (p.body ?? '').slice(0, 1500);

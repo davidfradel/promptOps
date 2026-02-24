@@ -3,6 +3,7 @@ export const Platform = {
   HACKERNEWS: 'HACKERNEWS',
   TWITTER: 'TWITTER',
   PRODUCTHUNT: 'PRODUCTHUNT',
+  GITHUB: 'GITHUB',
 } as const;
 export type Platform = (typeof Platform)[keyof typeof Platform];
 

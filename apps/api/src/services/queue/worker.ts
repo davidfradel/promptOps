@@ -6,6 +6,7 @@ import { logger } from '../../utils/logger.js';
 import { scrapeReddit } from '../scraper/reddit.js';
 import { scrapeHackerNews } from '../scraper/hackernews.js';
 import { scrapeProductHunt } from '../scraper/producthunt.js';
+import { scrapeGitHub } from '../scraper/github.js';
 import { extractInsightsAndCompetitors } from '../analysis/extract-insights.js';
 import { prioritizeInsights } from '../analysis/prioritization.js';
 import { generateSpec } from '../generation/spec-generator.js';
@@ -45,6 +46,9 @@ async function handleScrape(job: Job): Promise<void> {
         break;
       case 'PRODUCTHUNT':
         postsFound = await scrapeProductHunt(sourceId);
+        break;
+      case 'GITHUB':
+        postsFound = await scrapeGitHub(sourceId);
         break;
       default:
         throw new Error(`Unsupported platform: ${source.platform}`);

@@ -12,6 +12,7 @@ enum Platform {
   HACKERNEWS
   TWITTER
   PRODUCTHUNT
+  GITHUB
 }
 
 enum InsightType {

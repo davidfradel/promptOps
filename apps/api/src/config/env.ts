@@ -13,6 +13,7 @@ const envSchema = z
     CORS_ORIGINS: z.string().default('*'),
     SENTRY_DSN: z.string().optional(),
     PRODUCTHUNT_API_KEY: z.string().optional(),
+    GITHUB_TOKEN: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.NODE_ENV === 'production') {
