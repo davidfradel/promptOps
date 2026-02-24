@@ -45,6 +45,7 @@ Return ONLY a JSON array, no markdown fences.`;
   logger.info({ projectId, insightCount: insights.length }, 'Prioritizing insights');
 
   const result = await askClaude(systemPrompt, userPrompt, {
+    model: 'claude-haiku-4-5-20251001',
     temperature: 0.2,
     maxTokens: 4096,
   });

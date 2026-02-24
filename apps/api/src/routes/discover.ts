@@ -1,13 +1,28 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
+import { redis } from '../lib/redis.js';
 import { sendSuccess } from '../lib/response.js';
 import { discoverQuerySchema } from '@promptops/shared';
 
 export const discoverRouter = Router();
 
+const DISCOVER_CACHE_TTL = 60; // seconds
+
 discoverRouter.get('/', async (req, res) => {
   const userId = req.userId!;
   const { category, type, minSeverity, tag, cursor, limit } = discoverQuerySchema.parse(req.query);
+
+  // Redis cache for discover — 60s TTL
+  const cacheKey = `discover:${userId}:${category ?? ''}:${type ?? ''}:${minSeverity ?? ''}:${tag ?? ''}:${cursor ?? ''}:${limit}`;
+  const cached = await redis.get(cacheKey);
+  if (cached) {
+    const { data, meta } = JSON.parse(cached) as {
+      data: unknown[];
+      meta: { cursor: string | null; hasMore: boolean };
+    };
+    sendSuccess(res, data, meta);
+    return;
+  }
 
   // Get user's interest categories
   const interests = await prisma.userInterest.findMany({
@@ -65,8 +80,13 @@ discoverRouter.get('/', async (req, res) => {
     projectName: insight.project.name,
   }));
 
-  sendSuccess(res, result, {
+  const meta = {
     cursor: items.length > 0 ? items[items.length - 1]!.id : null,
     hasMore,
-  });
+  };
+
+  // Cache result for 60 seconds
+  await redis.setex(cacheKey, DISCOVER_CACHE_TTL, JSON.stringify({ data: result, meta }));
+
+  sendSuccess(res, result, meta);
 });

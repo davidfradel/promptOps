@@ -9,6 +9,13 @@ vi.mock('../lib/prisma.js', () => ({
   },
 }));
 
+vi.mock('../lib/redis.js', () => ({
+  redis: {
+    get: vi.fn().mockResolvedValue(null),
+    setex: vi.fn().mockResolvedValue('OK'),
+  },
+}));
+
 vi.mock('../lib/auth.js', () => ({
   verifyToken: vi.fn().mockReturnValue({ userId: 'user-1' }),
 }));

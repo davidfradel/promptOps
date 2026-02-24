@@ -27,6 +27,17 @@ export async function askClaude(
     messages: [{ role: 'user', content: user }],
   });
 
+  const { input_tokens, output_tokens } = response.usage;
+  logger.info(
+    {
+      model,
+      inputTokens: input_tokens,
+      outputTokens: output_tokens,
+      totalTokens: input_tokens + output_tokens,
+    },
+    'Claude API usage',
+  );
+
   const textBlock = response.content.find((block) => block.type === 'text');
   return textBlock?.text ?? '';
 }

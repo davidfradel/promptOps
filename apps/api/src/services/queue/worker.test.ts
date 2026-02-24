@@ -19,12 +19,8 @@ vi.mock('../scraper/hackernews.js', () => ({
   scrapeHackerNews: vi.fn(),
 }));
 
-vi.mock('../analysis/pain-points.js', () => ({
-  extractPainPoints: vi.fn(),
-}));
-
-vi.mock('../analysis/competition.js', () => ({
-  analyzeCompetition: vi.fn(),
+vi.mock('../analysis/extract-insights.js', () => ({
+  extractInsightsAndCompetitors: vi.fn(),
 }));
 
 vi.mock('../analysis/prioritization.js', () => ({
@@ -63,8 +59,7 @@ import { createWorker } from './worker.js';
 import { prisma } from '../../lib/prisma.js';
 import { scrapeReddit } from '../scraper/reddit.js';
 import { scrapeHackerNews } from '../scraper/hackernews.js';
-import { extractPainPoints } from '../analysis/pain-points.js';
-import { analyzeCompetition } from '../analysis/competition.js';
+import { extractInsightsAndCompetitors } from '../analysis/extract-insights.js';
 import { prioritizeInsights } from '../analysis/prioritization.js';
 import { generateSpec } from '../generation/spec-generator.js';
 
@@ -111,11 +106,8 @@ describe('worker', () => {
 
   it('should run analysis pipeline sequentially', async () => {
     const callOrder: string[] = [];
-    vi.mocked(extractPainPoints).mockImplementation(async () => {
-      callOrder.push('painPoints');
-    });
-    vi.mocked(analyzeCompetition).mockImplementation(async () => {
-      callOrder.push('competition');
+    vi.mocked(extractInsightsAndCompetitors).mockImplementation(async () => {
+      callOrder.push('extractInsights');
     });
     vi.mocked(prioritizeInsights).mockImplementation(async () => {
       callOrder.push('prioritize');
@@ -123,7 +115,7 @@ describe('worker', () => {
 
     await capturedProcessor!({ name: 'analyze', id: 'q2', data: { projectId: 'proj-1' } });
 
-    expect(callOrder).toEqual(['painPoints', 'competition', 'prioritize']);
+    expect(callOrder).toEqual(['extractInsights', 'prioritize']);
   });
 
   it('should route generate jobs to spec generator', async () => {

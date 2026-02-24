@@ -50,13 +50,14 @@ enum Category {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  passwordHash String
-  name         String?
-  onboardedAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  passwordHash       String
+  name               String?
+  onboardedAt        DateTime?
+  monthlyTokensUsed  Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   projects      Project[]
   interests     UserInterest[]
