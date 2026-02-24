@@ -3,6 +3,37 @@ import { logger } from '../../utils/logger.js';
 
 const GH_API = 'https://api.github.com';
 
+// Module-level rate limit state (shared across all calls in the process lifetime)
+let ghRateLimitRemaining = 60;
+let ghRateLimitReset = Math.floor(Date.now() / 1000) + 3600;
+
+function updateRateLimit(res: Response): void {
+  const remaining = res.headers.get('x-ratelimit-remaining');
+  const reset = res.headers.get('x-ratelimit-reset');
+  if (remaining !== null) ghRateLimitRemaining = parseInt(remaining, 10);
+  if (reset !== null) ghRateLimitReset = parseInt(reset, 10);
+}
+
+/** Returns false if we're rate-limited and can't wait; waits up to 60s if close to reset. */
+async function checkRateLimit(minRemaining = 5): Promise<boolean> {
+  if (ghRateLimitRemaining > minRemaining) return true;
+  const waitMs = ghRateLimitReset * 1000 - Date.now() + 2000;
+  if (waitMs > 0 && waitMs <= 60_000) {
+    logger.warn(
+      { waitMs, remaining: ghRateLimitRemaining },
+      'GitHub rate limit low — waiting for reset',
+    );
+    await new Promise((r) => setTimeout(r, waitMs));
+    ghRateLimitRemaining = 60; // optimistic reset
+    return true;
+  }
+  logger.warn(
+    { remaining: ghRateLimitRemaining },
+    'GitHub rate limit exhausted — skipping this step',
+  );
+  return false;
+}
+
 interface GHLabel {
   name: string;
 }
@@ -82,10 +113,13 @@ async function scrapeRepo(
   const maxPages = Math.ceil(limit / 100);
 
   while (totalPosts < limit && page <= maxPages) {
+    if (!(await checkRateLimit(10))) break;
+
     const apiUrl = `${GH_API}/repos/${owner}/${repo}/issues?state=open&sort=comments&direction=desc&per_page=100&page=${page}`;
 
     logger.info({ url: apiUrl, page }, 'Fetching GitHub repo issues');
     const res = await fetch(apiUrl, { headers });
+    updateRateLimit(res);
     if (!res.ok) throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
 
     const issues = (await res.json()) as GHIssue[];
@@ -119,8 +153,11 @@ async function scrapeSearch(
   const searchQuery = encodeURIComponent(`${query} type:issue state:open`);
   const apiUrl = `${GH_API}/search/issues?q=${searchQuery}&sort=comments&order=desc&per_page=${perPage}`;
 
+  if (!(await checkRateLimit(5))) return 0;
+
   logger.info({ query }, 'Searching GitHub issues');
   const res = await fetch(apiUrl, { headers });
+  updateRateLimit(res);
   if (!res.ok) throw new Error(`GitHub Search API error: ${res.status} ${res.statusText}`);
 
   const data = (await res.json()) as GHSearchResponse;
@@ -217,9 +254,15 @@ async function enrichTopIssuesWithComments(
     const { repo, issueNumber } = post.meta;
     if (!repo || issueNumber == null) continue;
 
+    if (!(await checkRateLimit(5))) {
+      logger.warn({ sourceId }, 'GitHub rate limit too low — stopping comment enrichment early');
+      break;
+    }
+
     try {
       const url = `${GH_API}/repos/${repo}/issues/${issueNumber}/comments?per_page=5`;
       const res = await fetch(url, { headers });
+      updateRateLimit(res);
       if (!res.ok) continue;
 
       const comments = (await res.json()) as GHComment[];
