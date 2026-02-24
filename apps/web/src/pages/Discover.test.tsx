@@ -40,6 +40,7 @@ vi.mock('../hooks/useToast', () => ({
 import { useDiscover } from '../hooks/useDiscover';
 import { Discover } from './Discover';
 import type { DiscoverInsight } from '@promptops/shared';
+import { fireEvent } from '@testing-library/react';
 
 const mockUseDiscover = vi.mocked(useDiscover);
 
@@ -103,5 +104,69 @@ describe('Discover', () => {
     render(<Discover />);
 
     expect(screen.getByText('No insights yet.')).toBeInTheDocument();
+  });
+
+  it('calls saveInsight and shows success toast on save', async () => {
+    mockUseDiscover.mockReturnValue({
+      insights: [fakeInsight],
+      loading: false,
+      error: null,
+      refetch: mockRefetch,
+    });
+    mockSaveInsight.mockResolvedValue(undefined);
+
+    render(<Discover />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await vi.waitFor(() => {
+      expect(mockSaveInsight).toHaveBeenCalledWith('ins-1');
+      expect(mockAddToast).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'success', message: 'Insight saved!' }),
+      );
+      expect(mockRefetch).toHaveBeenCalled();
+    });
+  });
+
+  it('shows error toast when save fails', async () => {
+    mockUseDiscover.mockReturnValue({
+      insights: [fakeInsight],
+      loading: false,
+      error: null,
+      refetch: mockRefetch,
+    });
+    mockSaveInsight.mockRejectedValue(new Error('Network error'));
+
+    render(<Discover />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await vi.waitFor(() => {
+      expect(mockAddToast).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'error', message: 'Failed to save insight' }),
+      );
+    });
+  });
+
+  it('calls unsaveInsight and shows info toast on unsave', async () => {
+    mockUseDiscover.mockReturnValue({
+      insights: [{ ...fakeInsight, isSaved: true }],
+      loading: false,
+      error: null,
+      refetch: mockRefetch,
+    });
+    mockUnsaveInsight.mockResolvedValue(undefined);
+
+    render(<Discover />);
+
+    // When isSaved=true the button text is "Saved"
+    fireEvent.click(screen.getByRole('button', { name: 'Saved' }));
+
+    await vi.waitFor(() => {
+      expect(mockUnsaveInsight).toHaveBeenCalledWith('ins-1');
+      expect(mockAddToast).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'info', message: 'Insight removed from saved' }),
+      );
+    });
   });
 });
