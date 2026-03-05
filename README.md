@@ -204,17 +204,50 @@ GitHub Actions runs on push/PR to `main`:
 4. **Build** — Full TypeScript compilation (after lint + tests pass)
 5. **Docker** — Build API and web images (main branch only, push events)
 
-## Docker
+## Deployment (Railway)
+
+Production runs on [Railway](https://railway.app) as a **single-service architecture**: the API serves both the REST endpoints and the React SPA static files from the same URL.
+
+**Live URL:** https://promptopsapi-production.up.railway.app
+
+**Test account:** `test@promptops.dev` / `Test1234`
+
+### Railway Services
+
+| Service          | Description                                          |
+| ---------------- | ---------------------------------------------------- |
+| `@promptops/api` | Express API + React SPA (single service, single URL) |
+| `Postgres`       | PostgreSQL database (Railway template)               |
+| `Redis`          | Redis for BullMQ (Railway template)                  |
+
+### How it works
+
+- `railway.toml` at the repo root configures build and start commands
+- `build:railway` compiles shared → API → web; the web build (`apps/web/dist`) is served by Express via `express.static()` + SPA fallback
+- The frontend uses relative URLs (`/api/v1/*`), so API and SPA coexist on the same domain — no reverse proxy needed
+- On deploy, Prisma migrations run automatically before the server starts
+- In development, Vite's dev server proxies `/api` to `localhost:3001` for the same effect
+
+### Required environment variables
+
+| Variable            | Description                           |
+| ------------------- | ------------------------------------- |
+| `DATABASE_URL`      | Internal Railway Postgres URL         |
+| `REDIS_URL`         | Internal Railway Redis URL            |
+| `ANTHROPIC_API_KEY` | Claude API key                        |
+| `JWT_SECRET`        | 32+ chars in production               |
+| `NODE_ENV`          | `production`                          |
+| `CORS_ORIGINS`      | Railway public domain URL             |
+| `PORT`              | `3001`                                |
+
+## Docker (local)
 
 | Service    | Image         | Port | Description                      |
 | ---------- | ------------- | ---- | -------------------------------- |
 | `postgres` | postgres:16   | 5432 | PostgreSQL database              |
 | `redis`    | redis:7       | 6379 | Redis for BullMQ job queue       |
-| `api`      | promptops-api | 3001 | Express API + BullMQ worker      |
-| `web`      | promptops-web | 80   | Nginx serving React frontend     |
+| `api`      | promptops-api | 3001 | Express API + BullMQ worker + SPA |
 | `migrate`  | promptops-api | —    | One-shot Prisma migration runner |
-
-Both `api` and `web` use multi-stage Docker builds for minimal production images.
 
 ## License
 

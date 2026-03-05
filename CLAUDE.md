@@ -167,6 +167,36 @@ npm run db:studio -w apps/api     # open Prisma Studio GUI
 | `NODE_ENV`          | no       | `development`                     | Environment                                         |
 | `LOG_LEVEL`         | no       | `info`                            | Pino log level                                      |
 
+## Deployment (Railway)
+
+Production runs on Railway as a **single-service architecture**: the API serves both the REST endpoints and the React SPA static files.
+
+**Railway project:** `PromptsOps` (a2f97acf-0649-4291-8b29-1064b8449bbf)
+
+**Services:**
+- `@promptops/api` — Express API + React SPA (single service, single URL)
+- `Postgres` — PostgreSQL database (Railway template)
+- `Redis` — Redis for BullMQ (Railway template)
+
+**How it works:**
+- `railway.toml` configures the build (`npm install && npm run build:railway`) and start command (`prisma migrate deploy && node apps/api/dist/index.js`)
+- `build:railway` compiles shared → API → web; the web build (`apps/web/dist`) is served by Express via `express.static()` + SPA fallback (see `apps/api/src/app.ts:41-47`)
+- The frontend uses relative URLs (`/api/v1/*`), so API and SPA coexist on the same domain with no proxy needed
+- In development, Vite's dev server proxies `/api` to `localhost:3001` for the same effect
+
+**Required env vars on `@promptops/api`:**
+- `DATABASE_URL` — Internal Railway Postgres URL
+- `REDIS_URL` — Internal Railway Redis URL
+- `ANTHROPIC_API_KEY` — Claude API key
+- `JWT_SECRET` — 32+ chars in production
+- `NODE_ENV=production`
+- `CORS_ORIGINS` — The Railway public domain URL
+- `PORT=3001`
+
+**Public URL:** https://promptopsapi-production.up.railway.app
+
+**Note:** There is no separate `@promptops/web` Railway service needed — the API serves everything. If one exists, it can be deleted.
+
 ## Roadmap
 
 - **Phase 1** (done): Monorepo, Prisma schema, Express CRUD routes, BullMQ infra, React shell
@@ -175,4 +205,4 @@ npm run db:studio -w apps/api     # open Prisma Studio GUI
 - **Phase 4** (done): Tests — Vitest setup, 22 API tests + 39 web tests (61 total)
 - **Phase 5** (done): Auth & Multi-tenancy — User model, JWT register/login, auth middleware, data isolation by userId, login/register pages, route guards
 - **Phase 6** — Features Avancées: scheduled recurring scrapes, ProductHunt scraper, Redis caching layer, CSV/PDF export, insight editing UI, analysis history, dashboard analytics over time
-- **Phase 7** — Déploiement & Production: Dockerfiles (API + web), docker-compose prod, GitHub Actions CI/CD, monitoring/metrics, security hardening, Prisma migrations workflow
+- **Phase 7** (done): Déploiement Railway — single-service architecture (API serves SPA), Postgres + Redis templates, Prisma migrations on deploy, healthcheck
