@@ -174,17 +174,20 @@ Production runs on Railway as a **single-service architecture**: the API serves 
 **Railway project:** `PromptsOps` (a2f97acf-0649-4291-8b29-1064b8449bbf)
 
 **Services:**
+
 - `@promptops/api` — Express API + React SPA (single service, single URL)
 - `Postgres` — PostgreSQL database (Railway template)
 - `Redis` — Redis for BullMQ (Railway template)
 
 **How it works:**
+
 - `railway.toml` configures the build (`npm install && npm run build:railway`) and start command (`prisma migrate deploy && node apps/api/dist/index.js`)
 - `build:railway` compiles shared → API → web; the web build (`apps/web/dist`) is served by Express via `express.static()` + SPA fallback (see `apps/api/src/app.ts:41-47`)
 - The frontend uses relative URLs (`/api/v1/*`), so API and SPA coexist on the same domain with no proxy needed
 - In development, Vite's dev server proxies `/api` to `localhost:3001` for the same effect
 
 **Required env vars on `@promptops/api`:**
+
 - `DATABASE_URL` — Internal Railway Postgres URL
 - `REDIS_URL` — Internal Railway Redis URL
 - `ANTHROPIC_API_KEY` — Claude API key

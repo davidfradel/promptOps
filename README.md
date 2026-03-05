@@ -230,24 +230,24 @@ Production runs on [Railway](https://railway.app) as a **single-service architec
 
 ### Required environment variables
 
-| Variable            | Description                           |
-| ------------------- | ------------------------------------- |
-| `DATABASE_URL`      | Internal Railway Postgres URL         |
-| `REDIS_URL`         | Internal Railway Redis URL            |
-| `ANTHROPIC_API_KEY` | Claude API key                        |
-| `JWT_SECRET`        | 32+ chars in production               |
-| `NODE_ENV`          | `production`                          |
-| `CORS_ORIGINS`      | Railway public domain URL             |
-| `PORT`              | `3001`                                |
+| Variable            | Description                   |
+| ------------------- | ----------------------------- |
+| `DATABASE_URL`      | Internal Railway Postgres URL |
+| `REDIS_URL`         | Internal Railway Redis URL    |
+| `ANTHROPIC_API_KEY` | Claude API key                |
+| `JWT_SECRET`        | 32+ chars in production       |
+| `NODE_ENV`          | `production`                  |
+| `CORS_ORIGINS`      | Railway public domain URL     |
+| `PORT`              | `3001`                        |
 
 ## Docker (local)
 
-| Service    | Image         | Port | Description                      |
-| ---------- | ------------- | ---- | -------------------------------- |
-| `postgres` | postgres:16   | 5432 | PostgreSQL database              |
-| `redis`    | redis:7       | 6379 | Redis for BullMQ job queue       |
+| Service    | Image         | Port | Description                       |
+| ---------- | ------------- | ---- | --------------------------------- |
+| `postgres` | postgres:16   | 5432 | PostgreSQL database               |
+| `redis`    | redis:7       | 6379 | Redis for BullMQ job queue        |
 | `api`      | promptops-api | 3001 | Express API + BullMQ worker + SPA |
-| `migrate`  | promptops-api | —    | One-shot Prisma migration runner |
+| `migrate`  | promptops-api | —    | One-shot Prisma migration runner  |
 
 ## License
 
