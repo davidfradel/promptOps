@@ -11,4 +11,5 @@ export const analyzeJobDataSchema = z.object({
 export const generateJobDataSchema = z.object({
   projectId: z.string(),
   specId: z.string(),
+  insightIds: z.array(z.string()).optional(),
 });

@@ -189,7 +189,7 @@ describe('specs routes', () => {
       );
 
       expect(res.status).toBe(201);
-      expect(enqueueGenerateJob).toHaveBeenCalledWith('project-1', 'spec-1');
+      expect(enqueueGenerateJob).toHaveBeenCalledWith('project-1', 'spec-1', undefined);
     });
 
     it('should return 404 for nonexistent project', async () => {

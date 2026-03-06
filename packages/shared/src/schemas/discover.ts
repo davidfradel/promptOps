@@ -7,6 +7,9 @@ export const discoverQuerySchema = z.object({
   type: InsightTypeSchema.optional(),
   minSeverity: z.coerce.number().optional(),
   tag: z.string().optional(),
+  search: z.string().optional(),
+  sort: z.enum(['recent', 'severity', 'confidence', 'relevance']).default('recent'),
+  dateRange: z.enum(['7d', '30d', '90d', 'all']).default('all'),
   cursor: z.string().optional(),
   limit: z.coerce.number().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
 });

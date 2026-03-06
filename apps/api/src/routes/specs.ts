@@ -93,9 +93,23 @@ specsRouter.post('/generate', async (req, res) => {
   const result = generateSpecSchema.safeParse(req.body);
   if (!result.success) throw new ValidationError(result.error.message);
 
-  const { projectId, format, title } = result.data;
+  const { format, title, insightIds } = result.data;
+  let { projectId } = result.data;
 
-  // Verify project exists and belongs to user
+  // If no projectId, derive it from the first insightId
+  if (!projectId && insightIds?.length) {
+    const firstId = insightIds[0]!;
+    const insight = await prisma.insight.findFirst({
+      where: { id: firstId, project: { userId: req.userId } },
+      select: { projectId: true },
+    });
+    if (!insight) throw new NotFoundError('Insight', firstId);
+    projectId = insight.projectId;
+  }
+
+  if (!projectId) throw new ValidationError('projectId or insightIds is required');
+
+  // Verify project belongs to user
   const project = await prisma.project.findFirst({
     where: { id: projectId, userId: req.userId },
   });
@@ -111,7 +125,7 @@ specsRouter.post('/generate', async (req, res) => {
     },
   });
 
-  await enqueueGenerateJob(projectId, spec.id);
+  await enqueueGenerateJob(projectId, spec.id, insightIds);
 
   sendCreated(res, spec);
 });

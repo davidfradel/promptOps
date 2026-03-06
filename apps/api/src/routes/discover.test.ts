@@ -20,6 +20,8 @@ vi.mock('../lib/auth.js', () => ({
   verifyToken: vi.fn().mockReturnValue({ userId: 'user-1' }),
 }));
 
+vi.mock('../utils/claude.js', () => ({ askClaude: vi.fn().mockResolvedValue('[]') }));
+
 vi.mock('../utils/logger.js', () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));

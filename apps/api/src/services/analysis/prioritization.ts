@@ -34,7 +34,7 @@ export async function prioritizeInsights(projectId: string): Promise<void> {
 
 For each insight, return:
 - insightId: the original insight ID
-- severity: new severity score 0-1 (1 = highest priority)
+- severity: new severity integer 0-4 (0=Low, 1=Medium, 2=High, 3=Critical, 4=Urgent)
 - confidence: new confidence score 0-1
 - reasoning: brief explanation of the scoring (1-2 sentences)
 

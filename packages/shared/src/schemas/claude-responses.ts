@@ -5,7 +5,11 @@ export const claudeInsightSchema = z.object({
   type: z.enum(['PAIN_POINT', 'FEATURE_REQUEST', 'TREND', 'SENTIMENT']),
   title: z.string(),
   description: z.string(),
-  severity: z.number().min(0).max(1),
+  severity: z
+    .number()
+    .min(0)
+    .max(4)
+    .transform((v) => Math.round(v)),
   confidence: z.number().min(0).max(1),
   tags: z.array(z.string()),
   sourcePostIds: z.array(z.string()),
@@ -15,7 +19,11 @@ export const competitorInsightSchema = z.object({
   type: z.literal('COMPETITOR'),
   title: z.string(),
   description: z.string(),
-  severity: z.number().min(0).max(1),
+  severity: z
+    .number()
+    .min(0)
+    .max(4)
+    .transform((v) => Math.round(v)),
   confidence: z.number().min(0).max(1),
   tags: z.array(z.string()),
   sourcePostIds: z.array(z.string()),
@@ -30,7 +38,11 @@ export const competitorInsightSchema = z.object({
 
 export const prioritizedInsightSchema = z.object({
   insightId: z.string(),
-  severity: z.number().min(0).max(1),
+  severity: z
+    .number()
+    .min(0)
+    .max(4)
+    .transform((v) => Math.round(v)),
   confidence: z.number().min(0).max(1),
   reasoning: z.string(),
 });

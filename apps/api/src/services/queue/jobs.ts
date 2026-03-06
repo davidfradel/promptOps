@@ -13,7 +13,11 @@ export async function enqueueAnalyzeJob(projectId: string): Promise<string> {
   return job.id ?? '';
 }
 
-export async function enqueueGenerateJob(projectId: string, specId: string): Promise<string> {
-  const job = await jobQueue.add('generate', { projectId, specId });
+export async function enqueueGenerateJob(
+  projectId: string,
+  specId: string,
+  insightIds?: string[],
+): Promise<string> {
+  const job = await jobQueue.add('generate', { projectId, specId, insightIds });
   return job.id ?? '';
 }

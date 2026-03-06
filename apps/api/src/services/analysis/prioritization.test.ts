@@ -49,7 +49,7 @@ describe('prioritizeInsights', () => {
       JSON.stringify([
         {
           insightId: 'ins-1',
-          severity: 0.9,
+          severity: 3,
           confidence: 0.85,
           reasoning: 'High impact issue affecting many users.',
         },
@@ -70,7 +70,7 @@ describe('prioritizeInsights', () => {
       expect.objectContaining({
         where: { id: 'ins-1' },
         data: expect.objectContaining({
-          severity: 0.9,
+          severity: 3,
           confidence: 0.85,
         }),
       }),
@@ -97,7 +97,7 @@ describe('prioritizeInsights', () => {
     vi.mocked(prisma.insight.findMany).mockResolvedValue(insights as never);
 
     vi.mocked(askClaude).mockResolvedValue(
-      '```json\n[{"insightId":"ins-1","severity":0.8,"confidence":0.7,"reasoning":"Important issue"}]\n```',
+      '```json\n[{"insightId":"ins-1","severity":3,"confidence":0.7,"reasoning":"Important issue"}]\n```',
     );
     vi.mocked(prisma.insight.update).mockResolvedValue({} as never);
 
@@ -106,7 +106,7 @@ describe('prioritizeInsights', () => {
     expect(prisma.insight.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'ins-1' },
-        data: expect.objectContaining({ severity: 0.8, confidence: 0.7 }),
+        data: expect.objectContaining({ severity: 3, confidence: 0.7 }),
       }),
     );
   });

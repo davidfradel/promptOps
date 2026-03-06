@@ -60,6 +60,7 @@ router.get('/api/v1/health', async (_req, res) => {
 // AI rate limiting for specific endpoints
 router.post('/api/v1/projects/:id/analyze', authMiddleware, aiRateLimiter);
 router.post('/api/v1/specs/generate', authMiddleware, aiRateLimiter);
+router.get('/api/v1/discover/semantic', authMiddleware, aiRateLimiter);
 
 router.use('/api/v1/auth', authRateLimiter, authRouter);
 router.use('/api/v1/categories', categoriesRouter);

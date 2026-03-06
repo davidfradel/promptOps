@@ -2,17 +2,21 @@ import { prisma } from '../../lib/prisma.js';
 import { askClaude } from '../../utils/claude.js';
 import { logger } from '../../utils/logger.js';
 
-export async function generateSpec(projectId: string, specId?: string): Promise<void> {
+export async function generateSpec(
+  projectId: string,
+  specId?: string,
+  insightIds?: string[],
+): Promise<void> {
   const project = await prisma.project.findUniqueOrThrow({
     where: { id: projectId },
     include: { sources: true },
   });
 
-  // Load top 50 insights by severity
+  // If specific insightIds provided, use those; otherwise top 50 by severity
   const insights = await prisma.insight.findMany({
-    where: { projectId },
+    where: insightIds?.length ? { id: { in: insightIds } } : { projectId },
     orderBy: { severity: 'desc' },
-    take: 50,
+    take: insightIds?.length ? undefined : 50,
   });
 
   // If specId provided, load the spec to get its format

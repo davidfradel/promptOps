@@ -84,8 +84,8 @@ async function handleAnalyze(job: Job): Promise<void> {
 }
 
 async function handleGenerate(job: Job): Promise<void> {
-  const { projectId, specId } = generateJobDataSchema.parse(job.data);
-  await generateSpec(projectId, specId);
+  const { projectId, specId, insightIds } = generateJobDataSchema.parse(job.data);
+  await generateSpec(projectId, specId, insightIds);
 }
 
 /** Auto-create a GitHub search source for each auto-generated project that has keywords but no GitHub source yet. */

@@ -8,6 +8,8 @@ const mockAddToast = vi.fn();
 
 vi.mock('../hooks/useDiscover', () => ({
   useDiscover: vi.fn(),
+  useDiscoverTags: vi.fn(),
+  useSemanticSearch: vi.fn(),
 }));
 
 vi.mock('../hooks/useSaved', () => ({
@@ -37,12 +39,14 @@ vi.mock('../hooks/useToast', () => ({
   }),
 }));
 
-import { useDiscover } from '../hooks/useDiscover';
+import { useDiscover, useDiscoverTags, useSemanticSearch } from '../hooks/useDiscover';
 import { Discover } from './Discover';
 import type { DiscoverInsight } from '@promptops/shared';
 import { fireEvent } from '@testing-library/react';
 
 const mockUseDiscover = vi.mocked(useDiscover);
+const mockUseDiscoverTags = vi.mocked(useDiscoverTags);
+const mockUseSemanticSearch = vi.mocked(useSemanticSearch);
 
 const fakeInsight: DiscoverInsight = {
   id: 'ins-1',
@@ -61,9 +65,19 @@ const fakeInsight: DiscoverInsight = {
   projectName: 'Test Project',
 };
 
+const defaultSemanticMock = {
+  results: [],
+  loading: false,
+  error: null,
+  search: vi.fn(),
+  clear: vi.fn(),
+};
+
 describe('Discover', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseDiscoverTags.mockReturnValue({ tags: [], loading: false });
+    mockUseSemanticSearch.mockReturnValue(defaultSemanticMock);
   });
 
   it('shows loading state', () => {
@@ -103,7 +117,7 @@ describe('Discover', () => {
 
     render(<Discover />);
 
-    expect(screen.getByText('No insights yet.')).toBeInTheDocument();
+    expect(screen.getByText('No insights found.')).toBeInTheDocument();
   });
 
   it('calls saveInsight and shows success toast on save', async () => {
@@ -124,7 +138,6 @@ describe('Discover', () => {
       expect(mockAddToast).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'success', message: 'Insight saved!' }),
       );
-      expect(mockRefetch).toHaveBeenCalled();
     });
   });
 
@@ -159,7 +172,6 @@ describe('Discover', () => {
 
     render(<Discover />);
 
-    // When isSaved=true the button text is "Saved"
     fireEvent.click(screen.getByRole('button', { name: 'Saved' }));
 
     await vi.waitFor(() => {
@@ -168,5 +180,19 @@ describe('Discover', () => {
         expect.objectContaining({ type: 'info', message: 'Insight removed from saved' }),
       );
     });
+  });
+
+  it('shows semantic search bar', () => {
+    mockUseDiscover.mockReturnValue({
+      insights: [],
+      loading: false,
+      error: null,
+      refetch: mockRefetch,
+    });
+
+    render(<Discover />);
+
+    expect(screen.getByPlaceholderText(/Ask anything/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Smart Search' })).toBeInTheDocument();
   });
 });

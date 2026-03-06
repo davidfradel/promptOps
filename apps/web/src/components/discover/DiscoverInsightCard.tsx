@@ -36,7 +36,14 @@ export function DiscoverInsightCard({ insight, onSave, onUnsave }: DiscoverInsig
           </div>
           <h3 className="text-sm font-semibold text-gray-900">{insight.title}</h3>
           <p className="mt-1 line-clamp-2 text-sm text-gray-500">{insight.description}</p>
-          <p className="mt-1 text-xs text-gray-400">from {insight.projectName}</p>
+          <p className="mt-1 text-xs text-gray-400">
+            from {insight.projectName} &middot;{' '}
+            {new Date(insight.createdAt).toLocaleDateString('fr-FR', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </p>
         </div>
         <Button
           variant={insight.isSaved ? 'secondary' : 'ghost'}

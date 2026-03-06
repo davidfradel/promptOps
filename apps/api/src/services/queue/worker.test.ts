@@ -143,7 +143,7 @@ describe('worker', () => {
       data: { projectId: 'proj-1', specId: 'spec-1' },
     });
 
-    expect(generateSpec).toHaveBeenCalledWith('proj-1', 'spec-1');
+    expect(generateSpec).toHaveBeenCalledWith('proj-1', 'spec-1', undefined);
   });
 
   it('should throw on unknown job type', async () => {

@@ -116,7 +116,7 @@ Return a JSON object with exactly two keys:
    - type: one of PAIN_POINT, FEATURE_REQUEST, TREND, SENTIMENT
    - title: concise title (max 100 chars)
    - description: detailed description (2-3 sentences)
-   - severity: 0-1 scale (1 = most severe/important)
+   - severity: integer 0-4 (0=Low, 1=Medium, 2=High, 3=Critical, 4=Urgent)
    - confidence: 0-1 scale (1 = most confident)
    - tags: array of relevant tags (lowercase, max 5)
    - sourcePostIds: array of post IDs that support this insight
@@ -125,7 +125,7 @@ Return a JSON object with exactly two keys:
    - type: always "COMPETITOR"
    - title: competitor name
    - description: brief overview (2-3 sentences)
-   - severity: threat level 0-1 (1 = highest threat)
+   - severity: threat level integer 0-4 (0=Low, 4=Urgent/highest threat)
    - confidence: 0-1 confidence score
    - tags: relevant tags (lowercase, max 5)
    - sourcePostIds: post IDs that mention this competitor
@@ -209,7 +209,7 @@ Return ONLY the JSON object, no markdown fences or other text.`;
         type: insightData.type as never,
         title: insightData.title,
         description: insightData.description,
-        severity: Math.round(insightData.severity),
+        severity: insightData.severity,
         confidence: insightData.confidence,
         tags: insightData.tags,
         metadata: (insightData.metadata ?? {}) as never,
