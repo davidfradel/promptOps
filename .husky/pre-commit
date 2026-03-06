@@ -1,3 +1,12 @@
 npx lint-staged
+
+# Generate Prisma types before type-checking (mirrors CI behavior)
+echo "Running prisma generate..."
+npx prisma generate --schema apps/api/prisma/schema.prisma --no-hints 2>&1 | tail -1
+
+# Type-check the API (catches the same errors as CI)
+echo "Type-checking API..."
+npx tsc --noEmit -p apps/api/tsconfig.json
+
 npm run test:web -- --run
 npm run test:api -- --run

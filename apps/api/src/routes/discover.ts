@@ -61,7 +61,7 @@ discoverRouter.get('/tags', async (req, res) => {
     where: { userId },
     select: { category: true },
   });
-  const userCategories = interests.map((i: { category: string }) => i.category);
+  const userCategories = interests.map((row) => row.category);
 
   if (userCategories.length === 0) {
     sendSuccess(res, []);
@@ -132,7 +132,7 @@ discoverRouter.get('/semantic', async (req, res) => {
     where: { userId },
     select: { category: true },
   });
-  const userCategories = interests.map((i: { category: string }) => i.category);
+  const userCategories = interests.map((row) => row.category);
 
   const keywordConditions = keywords.map((kw) => ({
     OR: [
@@ -185,7 +185,7 @@ discoverRouter.get('/', async (req, res) => {
     where: { userId },
     select: { category: true },
   });
-  const userCategories = interests.map((i: { category: string }) => i.category);
+  const userCategories = interests.map((row) => row.category);
 
   if (userCategories.length === 0) {
     sendSuccess(res, [], { cursor: null, hasMore: false });
